@@ -26,6 +26,10 @@
     --mat-dark: #167d6d;
     --mat-soft: #e0f5f1;
     --mat-line: #a9e2d8;
+    --concept: #c23c7c;
+    --concept-dark: #9c2f63;
+    --concept-soft: #fbe6f0;
+    --concept-line: #f0b8d3;
   }
   *{box-sizing:border-box;}
   body{
@@ -163,6 +167,33 @@
     border-color: var(--mat);
     color:#fff;
   }
+  .concept-section{
+    margin-top:6px;
+    padding:10px 10px 12px;
+    background: var(--concept-soft);
+    border:1.5px dashed var(--concept-line);
+    border-radius:12px;
+  }
+  .concept-section .filter-label{ margin-top:0; color: var(--concept-dark); }
+  .concept-section .chip-row{ margin-top:6px; }
+  .concept-section .chip{
+    border-color: var(--concept-line);
+    background:#fff;
+    color: var(--concept-dark);
+  }
+  .concept-section .chip:hover{ border-color: var(--concept); }
+  .concept-section .chip.active{
+    background: var(--concept);
+    border-color: var(--concept);
+    color:#fff;
+  }
+  .concept-note{
+    font-size:.68rem;
+    color: var(--concept-dark);
+    opacity:.8;
+    margin-top:8px;
+    line-height:1.5;
+  }
   .toggle-row{
     display:flex;
     align-items:center;
@@ -231,21 +262,22 @@
   }
   .mode-row{
     display:flex;
-    gap:6px;
+    gap:5px;
     margin-top:10px;
   }
   .mode-btn{
     flex:1;
     text-align:center;
-    padding:8px 6px;
+    padding:8px 4px;
     border-radius:10px;
     border:1.5px solid var(--line);
     background:#fbfaff;
     color: var(--ink-soft);
-    font-size:.84rem;
+    font-size:.76rem;
     font-weight:700;
     cursor:pointer;
     user-select:none;
+    white-space:nowrap;
     transition: all .15s ease;
   }
   .mode-btn.active{
@@ -253,6 +285,8 @@
     border-color: var(--accent);
     color:#fff;
   }
+  .mode-btn#modeMat.active{ background: var(--mat); border-color: var(--mat); }
+  .mode-btn#modeConcept.active{ background: var(--concept); border-color: var(--concept); }
   .mat-list{
     margin-top:8px;
     display:flex;
@@ -294,6 +328,28 @@
     border:1px solid #ecd7a8;
     border-radius:999px;
     padding:2px 9px;
+  }
+  .concept-row{
+    margin-top:6px;
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:5px;
+  }
+  .concept-label{
+    font-size:.68rem;
+    color: var(--ink-soft);
+    font-weight:700;
+    white-space:nowrap;
+  }
+  .concept-tag{
+    font-size:.72rem;
+    color: var(--concept-dark);
+    background: var(--concept-soft);
+    border:1px solid var(--concept-line);
+    border-radius:999px;
+    padding:2px 9px;
+    font-weight:700;
   }
   .empty{
     text-align:center;
@@ -351,8 +407,9 @@
 <div class="wrap">
   <div class="panel">
     <div class="mode-row">
-      <div class="mode-btn active" id="modeName">🔤 名前でさがす</div>
-      <div class="mode-btn" id="modeMat">🧵 材料でさがす</div>
+      <div class="mode-btn active" id="modeName">🔤 名前</div>
+      <div class="mode-btn" id="modeMat">🧵 材料</div>
+      <div class="mode-btn" id="modeConcept">✨ コンセプト</div>
     </div>
     <div class="search-row">
       <input type="text" id="q" placeholder="名前で検索（例：もくせいスツール）" autocomplete="off">
@@ -363,7 +420,12 @@
       <div class="filter-label">🧵 材料グループ（複数選べます・すべて選んだ材料を使うものだけに絞り込みます）</div>
       <div class="chip-row" id="matChips"></div>
     </div>
-    <div class="toggle-row">
+    <div class="concept-section" id="conceptSection" style="display:none;">
+      <div class="filter-label">✨ テーマから選ぶ（タップで検索、複数の言葉をつなげてもOK）</div>
+      <div class="chip-row" id="conceptChips"></div>
+      <p class="concept-note">※本物のAIが考えているわけではなく、あらかじめ用意したテーマ辞書とキーワードで機械的に候補を絞り込む簡易機能です。思ったニュアンスと違う候補が混ざったり、逆に何も見つからないこともあります。</p>
+    </div>
+    <div class="toggle-row" id="sortRow">
       <select id="sortSel">
         <option value="price-desc">売値が高い順</option>
         <option value="price-asc">売値が低い順</option>
@@ -383,6 +445,7 @@
   <p>🔨 DIYレシピで作れる家具・道具・壁紙・床・ラグ・衣装・料理などをまとめて検索できます。ここでの売値は、作った完成品をタヌキ商店で売却したときの基本価格です（レシピカード自体の売値ではありません）。</p>
   <p>🧵 各アイテムには必要な材料と個数も表示されます。「材料でさがす」に切り替えると、材料のグループ（貝がら・木材・石材など）を複数同時に選んで絞り込めます。複数選んだ場合は、選んだグループの材料をすべて使うレシピだけに絞り込まれます（例：「貝がら」と「鉱石・いし」を両方ONにすると、貝がらも鉱石も両方使うレシピだけが表示されます）。見つけたら、そのまま他に何が必要かも一覧で確認できます。</p>
   <p>📦 各アイテムには、そのDIYレシピ自体の入手方法（住民からもらう／タヌキ商店で購入／季節イベントの限定NPCから／特定の魚を釣った報酬　など）も表示しています。</p>
+  <p>✨ 「コンセプトでさがす」では、「海辺」「和風」「かわいい」のようなテーマの言葉を入力すると、それっぽいDIYの候補を一致度順に表示します。テーマのチップをタップするだけでも検索できます。あらかじめ用意したキーワード辞書による簡易的な絞り込みで、本物のAIが自由に発想しているわけではない点にご注意ください。</p>
   <p>🧱 マイデザ機能の「はしら」「しきりカウンター」など一部の地形パーツ（24件）は、そもそも売却の対象外のため「売却不可」と表示しています。</p>
   <p>📶 表示件数が多いため、まずカテゴリや検索で絞り込むと見やすくなります。</p>
   <p>データ出典: コミュニティのデータマイニング情報（npm「animal-crossing」パッケージ／各種公開スプレッドシート）を基に作成（2026年08月18日 時点）。ゲームアップデートで変更される場合があります。</p>
@@ -429,6 +492,28 @@ const MAT_GROUP_EMOJI = {
 };
 const MAT_GROUPS = Array.from(new Set(DATA.flatMap(d => d.materials.map(m => m.group))))
   .sort((a,b) => (MAT_GROUP_EMOJI[a] ? Object.keys(MAT_GROUP_EMOJI).indexOf(a) : 99) - (MAT_GROUP_EMOJI[b] ? Object.keys(MAT_GROUP_EMOJI).indexOf(b) : 99));
+
+// 「コンセプトでさがす」用のテーマ辞書。本物のAIではなく、あらかじめ用意した
+// テーマ名・言い換え語（alias）・アイテム名にヒットさせるキーワード（kw）の
+// 組み合わせで、それっぽい候補を機械的に絞り込む簡易機能。
+const CONCEPTS = [
+  { name:"海辺・トロピカル", emoji:"🏖️", alias:["海辺","うみべ","海","うみ","リゾート","南国","なんごく","トロピカル","常夏","とこなつ"], kw:["マーメイド","かいがら","ヤシの","さんご","ビーチ","ヒトデ"] },
+  { name:"和風", emoji:"🎋", alias:["和風","わふう","日本","にほん","和室","わしつ","ジャパン"], kw:["和風","わふう","ぼんさい","たけの","たけがき","しょうじ","こたつ","たたみ","のれん"] },
+  { name:"きらきらゴールド", emoji:"✨", alias:["きらきら","豪華","ごうか","ゴージャス","セレブ"], kw:["ゴールド","きんの","きんぱく","きんかい","キラキラ","黄金","おうごん"] },
+  { name:"花・フラワー", emoji:"🌸", alias:["花","はな","お花","おはな","花柄","はながら"], kw:["フラワー","はなかざり","かんむり","花の","はなの"] },
+  { name:"さくら", emoji:"🌸", alias:["桜","さくら","お花見","はなみ","春","はる"], kw:["さくらの","さくらな","桜"] },
+  { name:"北欧・ナチュラル", emoji:"🌿", alias:["北欧","ほくおう","ナチュラル","ウッド","木の","きの"], kw:["北欧","ほくおう","ナチュラル","もくせい","木製"] },
+  { name:"モダン・シンプル", emoji:"🏙️", alias:["モダン","シンプル","おしゃれ","スタイリッシュ"], kw:["モダン","シンプル","シック","クール"] },
+  { name:"ゴシック・ダーク", emoji:"🦇", alias:["ゴシック","ダーク","黒","くろ","ホラー","不気味","ぶきみ"], kw:["ゴシック","ダーク","こうもり"] },
+  { name:"ハロウィン", emoji:"🎃", alias:["ハロウィン","かぼちゃ","パンプキン","おばけ","魔女","まじょ"], kw:["ハロウィン","パンプキン","かぼちゃ","おばけ","まじょ"] },
+  { name:"クリスマス", emoji:"🎄", alias:["クリスマス","冬","ふゆ","サンタ","雪","ゆき"], kw:["クリスマス","もみの木","トナカイ","サンタ","キャンドル"] },
+  { name:"パーティー・お祝い", emoji:"🎉", alias:["パーティー","お祝い","おいわい","誕生日","たんじょうび","記念日"], kw:["パーティー","バルーン","くすだま","ケーキ","ろうそく"] },
+  { name:"ウェディング", emoji:"💍", alias:["ウェディング","結婚式","けっこんしき","ブライダル","花嫁","はなよめ"], kw:["ウェディング","ブーケ"] },
+  { name:"アイアン・インダストリアル", emoji:"🔩", alias:["アイアン","インダストリアル","工業","こうぎょう","無骨","ぶこつ","鉄","てつ"], kw:["アイアン"] },
+  { name:"ガーデニング・庭", emoji:"🌷", alias:["ガーデン","庭","にわ","ガーデニング","植物","しょくぶつ"], kw:["ガーデン","にわいし"] },
+  { name:"アウトドア・キャンプ", emoji:"🏕️", alias:["キャンプ","アウトドア","焚き火","たき火","たきび","バーベキュー"], kw:["キャンプ","たきび","ランタン"] },
+  { name:"宇宙・スペース", emoji:"🚀", alias:["宇宙","うちゅう","スペース","ロケット","SF"], kw:["うちゅうせん","スペースシャトル","ロケット"] },
+];
 
 let state = { mode:"name", q:"", cat:"all", matGroups:new Set(), sort:"price-desc" };
 
@@ -482,22 +567,51 @@ function syncMatChips(){
 const qInput = document.getElementById('q');
 const modeNameBtn = document.getElementById('modeName');
 const modeMatBtn = document.getElementById('modeMat');
+const modeConceptBtn = document.getElementById('modeConcept');
+const conceptSection = document.getElementById('conceptSection');
+const conceptChips = document.getElementById('conceptChips');
+const sortRow = document.getElementById('sortRow');
+
+CONCEPTS.forEach(c=>{
+  const chip = document.createElement('div');
+  chip.className = 'chip';
+  chip.textContent = `${c.emoji} ${c.name}`;
+  chip.addEventListener('click', ()=>{
+    qInput.value = c.name;
+    state.q = c.name;
+    [...conceptChips.children].forEach(ch=>ch.classList.toggle('active', ch===chip));
+    render();
+  });
+  conceptChips.appendChild(chip);
+});
 
 function setMode(mode){
   state.mode = mode;
   modeNameBtn.classList.toggle('active', mode==='name');
   modeMatBtn.classList.toggle('active', mode==='material');
+  modeConceptBtn.classList.toggle('active', mode==='concept');
   matSection.style.display = mode==='material' ? 'block' : 'none';
-  qInput.placeholder = mode==='material'
-    ? '材料名で検索（例：シャコガイ、てっこうせき）'
-    : '名前で検索（例：もくせいスツール）';
+  conceptSection.style.display = mode==='concept' ? 'block' : 'none';
+  sortRow.style.display = mode==='concept' ? 'none' : 'flex';
+  if(mode==='material'){
+    qInput.placeholder = '材料名で検索（例：シャコガイ、てっこうせき）';
+  }else if(mode==='concept'){
+    qInput.placeholder = 'コンセプトを入力（例：海辺リゾート風、和風）';
+  }else{
+    qInput.placeholder = '名前で検索（例：もくせいスツール）';
+  }
   render();
 }
 modeNameBtn.addEventListener('click', ()=> setMode('name'));
 modeMatBtn.addEventListener('click', ()=> setMode('material'));
+modeConceptBtn.addEventListener('click', ()=> setMode('concept'));
 
 qInput.addEventListener('input', e=>{
   state.q = e.target.value.trim();
+  if(state.mode==='concept'){
+    // 手入力したら、タップ済みのテーマチップのハイライトはいったん解除する
+    [...conceptChips.children].forEach(ch => ch.classList.remove('active'));
+  }
   render();
 });
 document.getElementById('sortSel').addEventListener('change', e=>{
@@ -532,7 +646,52 @@ function obtainRowHtml(d){
   ).join('')}</div>`;
 }
 
-function cardHtml(d, q){
+// クエリ文字列から、ヒットするテーマ（コンセプト）を探す。
+// AIの推論ではなく、テーマ名／言い換え語（alias）／キーワード（kw）との
+// 部分一致による機械的な判定。
+function matchConceptsForQuery(rawQ){
+  const q = normalizeForSearch(rawQ || '').trim();
+  if(!q) return [];
+  const tokens = q.split(/[\s、,・]+/).filter(Boolean);
+  const testStrings = Array.from(new Set([q, ...tokens]));
+  return CONCEPTS.filter(c=>{
+    const candidates = [c.name, ...(c.alias||[]), ...c.kw].map(normalizeForSearch);
+    return testStrings.some(t=>{
+      if(!t) return false;
+      return candidates.some(cand=>{
+        if(cand === t) return true;
+        if(t.length>=2 && cand.includes(t)) return true;
+        if(cand.length>=2 && t.includes(cand)) return true;
+        return false;
+      });
+    });
+  });
+}
+
+// ヒットしたテーマのkwが、アイテム名に何回登場するかで簡易スコアリングする。
+// 複数のテーマにまたがってヒットするアイテムほど、それっぽさが高いとみなす。
+function conceptMatchForItem(d, activeConcepts){
+  const name = normalizeForSearch(d.name);
+  const hitConcepts = [];
+  let score = 0;
+  activeConcepts.forEach(c=>{
+    const hitCount = c.kw.filter(k => name.includes(normalizeForSearch(k))).length;
+    if(hitCount > 0){
+      score += hitCount;
+      hitConcepts.push(c);
+    }
+  });
+  return { score, concepts: hitConcepts };
+}
+
+function conceptRowHtml(concepts){
+  if(!concepts || !concepts.length) return '';
+  return `<div class="concept-row"><span class="concept-label">✨ 近いテーマ</span>${concepts.map(c=>
+    `<span class="concept-tag">${c.emoji} ${c.name}</span>`
+  ).join('')}</div>`;
+}
+
+function cardHtml(d, q, matchedConcepts){
   const priceHtml = d.price === null
     ? `<div class="price unsellable">売却不可</div>`
     : `<div class="price">${d.price.toLocaleString()}<small> ベル</small></div>`;
@@ -545,6 +704,7 @@ function cardHtml(d, q){
           <span class="cat-tag">${d.category}</span>
           ${matListHtml(d, q)}
           ${obtainRowHtml(d)}
+          ${state.mode==='concept' ? conceptRowHtml(matchedConcepts) : ''}
         </div>
         ${priceHtml}
       </div>
@@ -554,7 +714,42 @@ function cardHtml(d, q){
 
 function render(){
   const list = document.getElementById('list');
+  const emptyMsg = document.getElementById('emptyMsg');
   const q = normalizeForSearch(state.q);
+
+  if(state.mode === 'concept'){
+    const activeConcepts = matchConceptsForQuery(state.q);
+    const scored = DATA
+      .filter(d => state.cat === 'all' || d.category === state.cat)
+      .map(d => Object.assign({ d }, conceptMatchForItem(d, activeConcepts)))
+      .filter(x => x.score > 0);
+    scored.sort((a,b)=>{
+      if(b.score !== a.score) return b.score - a.score;
+      if(a.d.price === null && b.d.price === null) return a.d.name.localeCompare(b.d.name,'ja');
+      if(a.d.price === null) return 1;
+      if(b.d.price === null) return -1;
+      return b.d.price - a.d.price;
+    });
+
+    document.getElementById('countLine').textContent = state.q.trim()
+      ? `${scored.length} 件表示中（近いテーマ順）`
+      : '';
+
+    if(!state.q.trim()){
+      emptyMsg.textContent = '✨ コンセプト（テーマ）を入力するか、下のチップをタップしてください。';
+      emptyMsg.style.display = 'block';
+      list.innerHTML = '';
+    }else if(scored.length === 0){
+      emptyMsg.textContent = '見つかりませんでした。別の言葉を試すか、下のチップもタップしてみてください。';
+      emptyMsg.style.display = 'block';
+      list.innerHTML = '';
+    }else{
+      emptyMsg.style.display = 'none';
+      list.innerHTML = scored.map(x => cardHtml(x.d, '', x.concepts)).join('');
+    }
+    return;
+  }
+
   let items = DATA.filter(d=>{
     if(state.cat !== 'all' && d.category !== state.cat) return false;
     if(state.mode === 'name'){
@@ -570,7 +765,8 @@ function render(){
   });
 
   document.getElementById('countLine').textContent = `${items.length} 件表示中（全${DATA.length}件）`;
-  document.getElementById('emptyMsg').style.display = items.length ? 'none' : 'block';
+  emptyMsg.textContent = '見つかりませんでした。検索語やカテゴリを変えてみてください。';
+  emptyMsg.style.display = items.length ? 'none' : 'block';
 
   let groups;
   if(state.mode === 'name' && q){
