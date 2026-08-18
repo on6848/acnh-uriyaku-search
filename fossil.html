@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>あつ森 化石図鑑</title>
+<meta name="theme-color" content="#8a6a3a">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<style>
+  :root{
+    --bg: #f3ece0;
+    --card: #ffffff;
+    --ink: #3b332a;
+    --ink-soft: #7a7063;
+    --accent: #a3763f;
+    --accent-dark: #7d5a2f;
+    --accent-soft: #f1e4d0;
+    --line: #e5d9c4;
+    --gold: #c8912a;
+    --blue: #3f7fb0;
+    --done: #4f8a5b;
+    --radius: 14px;
+    --shadow: 0 2px 10px rgba(59,51,42,0.08);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family: "Hiragino Sans", "Yu Gothic", "Segoe UI", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    padding-bottom: 40px;
+  }
+  header{
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+    color: #fff;
+    padding: 20px 16px 22px;
+    border-radius: 0 0 20px 20px;
+    box-shadow: var(--shadow);
+  }
+  header h1{
+    margin: 0 0 4px;
+    font-size: 1.35rem;
+    letter-spacing: .02em;
+  }
+  header p{
+    margin: 0;
+    font-size: .82rem;
+    opacity: .9;
+  }
+  .nav-link{
+    display:inline-block;
+    margin-top:8px;
+    font-size:.78rem;
+    color:#fff;
+    background: rgba(255,255,255,0.18);
+    padding: 4px 11px;
+    border-radius: 999px;
+    text-decoration:none;
+  }
+  .nav-link:hover{ background: rgba(255,255,255,0.28); }
+  .wrap{
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 0 14px;
+  }
+  .panel{
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 14px;
+    margin-top: -14px;
+    position: relative;
+    z-index: 2;
+  }
+  .search-row{ display:flex; gap:8px; }
+  .search-row input[type=text]{
+    flex:1;
+    padding: 11px 14px;
+    border-radius: 999px;
+    border: 1.5px solid var(--line);
+    font-size: 1rem;
+    outline:none;
+    background:#fbfaf7;
+  }
+  .search-row input[type=text]:focus{ border-color: var(--accent); }
+  .toggle-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-top:12px;
+    flex-wrap:wrap;
+  }
+  .toggle{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-size:.85rem;
+    color: var(--ink-soft);
+    cursor:pointer;
+  }
+  .toggle input{ width:16px;height:16px;accent-color: var(--accent); }
+  select{
+    padding:7px 10px;
+    border-radius:8px;
+    border:1.5px solid var(--line);
+    background:#fbfaf7;
+    color:var(--ink);
+    font-size:.85rem;
+  }
+  .progress-box{
+    margin-top:12px;
+    padding-top:12px;
+    border-top:1px dashed var(--line);
+  }
+  .progress-label{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    font-size:.85rem;
+    color: var(--ink-soft);
+    margin-bottom:6px;
+  }
+  .progress-label b{
+    color: var(--accent-dark);
+    font-size:1.05rem;
+  }
+  .progress-track{
+    background: var(--accent-soft);
+    border-radius: 6px;
+    height: 12px;
+    overflow:hidden;
+  }
+  .progress-fill{
+    height:12px;
+    background: linear-gradient(90deg, var(--accent) 0%, var(--done) 100%);
+    border-radius: 6px;
+    transition: width .25s ease;
+  }
+  .count-line{
+    font-size:.8rem;
+    color: var(--ink-soft);
+    margin-top:10px;
+  }
+  .list{
+    margin-top:12px;
+    display:flex;
+    flex-direction:column;
+    gap:9px;
+  }
+  /* --- グループカード（同じ化石の仲間をまとめる） --- */
+  .group-card{
+    background: var(--card);
+    border:1px solid var(--line);
+    border-radius: 12px;
+    box-shadow: 0 1px 4px rgba(59,51,42,0.05);
+    overflow:hidden;
+  }
+  .group-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding: 10px 13px;
+    background: var(--accent-soft);
+  }
+  .group-head .gname{
+    font-weight:800;
+    font-size:.98rem;
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .group-progress{
+    font-size:.75rem;
+    font-weight:700;
+    color: var(--ink-soft);
+    white-space:nowrap;
+  }
+  .group-progress.complete{ color: var(--done); }
+  .part-row{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding: 9px 13px;
+    border-top: 1px solid var(--line);
+  }
+  .part-row.done{ opacity:.55; }
+  .part-main{ flex:1; min-width:0; }
+  .part-top{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .part-name{ font-weight:700; font-size:.95rem; }
+  .part-tag{
+    font-size:.68rem;
+    color: var(--ink-soft);
+    font-weight:600;
+    margin-left:4px;
+  }
+  .price{
+    font-weight:800;
+    font-size:1.02rem;
+    color: var(--accent-dark);
+    white-space:nowrap;
+  }
+  .price small{ font-weight:600; font-size:.7rem; color: var(--ink-soft); }
+  .catch-check{
+    width:22px;height:22px;
+    accent-color: var(--accent);
+    cursor:pointer;
+    flex:0 0 auto;
+  }
+  .empty{
+    text-align:center;
+    color: var(--ink-soft);
+    padding:40px 10px;
+    font-size:.9rem;
+  }
+  .group-gap{
+    height:26px;
+    position:relative;
+  }
+  .group-gap::after{
+    content:"";
+    position:absolute;
+    left:0; right:0; top:50%;
+    border-top:1px dashed var(--line);
+  }
+  footer{
+    max-width:760px;
+    margin: 24px auto 0;
+    padding: 0 18px;
+    font-size:.72rem;
+    color: var(--ink-soft);
+    line-height:1.6;
+  }
+  .top-btn{
+    position:fixed;
+    right:16px;
+    bottom:16px;
+    background:var(--accent);
+    color:#fff;
+    border:none;
+    width:44px;height:44px;
+    border-radius:50%;
+    font-size:1.1rem;
+    box-shadow: var(--shadow);
+    cursor:pointer;
+    display:none;
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>🦴 あつ森 化石図鑑</h1>
+    <p>化石73種類の取得状況と売値をすぐ確認</p>
+    <a class="nav-link" href="index.html">← 虫・魚・海の幸の売値サーチへ</a>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="panel">
+    <div class="search-row">
+      <input type="text" id="q" placeholder="名前で検索（例：Tレックス）" autocomplete="off">
+    </div>
+    <div class="toggle-row">
+      <select id="sortSel">
+        <option value="group">仲間ごとにまとめる</option>
+        <option value="price-desc">売値が高い順</option>
+        <option value="price-asc">売値が低い順</option>
+        <option value="name-asc">名前順</option>
+      </select>
+      <label class="toggle"><input type="checkbox" id="hideDone"> 収集済みを隠す</label>
+    </div>
+    <div class="progress-box">
+      <div class="progress-label"><span>収集状況</span><span><b id="doneCount">0</b> / 73 種（<span id="donePct">0</span>%）</span></div>
+      <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    </div>
+    <div class="count-line" id="countLine"></div>
+  </div>
+
+  <div class="list" id="list"></div>
+  <div class="empty" id="emptyMsg" style="display:none;">見つかりませんでした。検索語を変えてみてください。</div>
+</div>
+
+<button class="top-btn" id="topBtn">↑</button>
+
+<footer>
+  <p>💡 チェックボックスは収集済みのものの一時的なメモです（このページを閉じる・再読み込みすると消えます／どうぶつの森ゲーム内のとびだせ！図鑑データとは連動していません）。</p>
+  <p>🦴 化石は季節や時間帯に関係なく、島のどこか（地面の亀裂・崖の上・砂浜など）に1日5〜6個湧きます。掘り出した化石は博物館のブラーゼ（フータ）に見せて鑑定してもらうまで名前がわかりません。</p>
+  <p>🧩 「仲間ごとにまとめる」表示では、複数のパーツからなる化石（骨格）をひとまとめにして、何個中何個そろっているかを確認できます。</p>
+  <p>データ出典: 各種あつ森攻略サイトの公開情報をもとに作成（2026年08月18日 時点）。ゲームアップデートで変更される場合があります。</p>
+</footer>
+
+<script>
+const DATA = [{"id": 1, "group": "アウストラロピテクス", "isSolo": true, "part": null, "name": "アウストラロピテクス", "price": 1100}, {"id": 2, "group": "アカントステガ", "isSolo": true, "part": null, "name": "アカントステガ", "price": 2000}, {"id": 3, "group": "あしあとの化石", "isSolo": true, "part": null, "name": "あしあとの化石", "price": 1000}, {"id": 4, "group": "アノマロカリス", "isSolo": true, "part": null, "name": "アノマロカリス", "price": 2000}, {"id": 5, "group": "アンキロサウルス", "isSolo": false, "part": "あたま", "name": "アンキロサウルスのあたま", "price": 3500}, {"id": 6, "group": "アンキロサウルス", "isSolo": false, "part": "からだ", "name": "アンキロサウルスのからだ", "price": 3000}, {"id": 7, "group": "アンキロサウルス", "isSolo": false, "part": "しっぽ", "name": "アンキロサウルスのしっぽ", "price": 2500}, {"id": 8, "group": "アンモナイト", "isSolo": true, "part": null, "name": "アンモナイト", "price": 1100}, {"id": 9, "group": "アーケロン", "isSolo": false, "part": "あたま", "name": "アーケロンのあたま", "price": 4000}, {"id": 10, "group": "アーケロン", "isSolo": false, "part": "からだ", "name": "アーケロンのからだ", "price": 3500}, {"id": 11, "group": "イグアノドン", "isSolo": false, "part": "あたま", "name": "イグアノドンのあたま", "price": 4000}, {"id": 12, "group": "イグアノドン", "isSolo": false, "part": "からだ", "name": "イグアノドンのからだ", "price": 3500}, {"id": 13, "group": "イグアノドン", "isSolo": false, "part": "しっぽ", "name": "イグアノドンのしっぽ", "price": 3000}, {"id": 14, "group": "ウンコの化石", "isSolo": true, "part": null, "name": "ウンコの化石", "price": 1100}, {"id": 15, "group": "オフタルモサウルス", "isSolo": false, "part": "あたま", "name": "オフタルモサウルスのあたま", "price": 2500}, {"id": 16, "group": "オフタルモサウルス", "isSolo": false, "part": "からだ", "name": "オフタルモサウルスのからだ", "price": 2000}, {"id": 17, "group": "ケツァルコアトルス", "isSolo": false, "part": "あたま", "name": "ケツァルコアトルスのあたま", "price": 4500}, {"id": 18, "group": "ケツァルコアトルス", "isSolo": false, "part": "右翼", "name": "ケツァルコアトルスのうよく", "price": 5000}, {"id": 19, "group": "ケツァルコアトルス", "isSolo": false, "part": "左翼", "name": "ケツァルコアトルスのさよく", "price": 5000}, {"id": 20, "group": "コハク", "isSolo": true, "part": null, "name": "コハク", "price": 1200}, {"id": 21, "group": "サメの歯の化石", "isSolo": true, "part": null, "name": "サメの歯の化石", "price": 1000}, {"id": 22, "group": "さんようちゅう", "isSolo": true, "part": null, "name": "さんようちゅう", "price": 1300}, {"id": 23, "group": "しそちょう", "isSolo": true, "part": null, "name": "しそちょう", "price": 1300}, {"id": 24, "group": "ジュラマイア", "isSolo": true, "part": null, "name": "ジュラマイア", "price": 1500}, {"id": 25, "group": "ステゴサウルス", "isSolo": false, "part": "あたま", "name": "ステゴサウルスのあたま", "price": 5000}, {"id": 26, "group": "ステゴサウルス", "isSolo": false, "part": "からだ", "name": "ステゴサウルスのからだ", "price": 4500}, {"id": 27, "group": "ステゴサウルス", "isSolo": false, "part": "しっぽ", "name": "ステゴサウルスのしっぽ", "price": 4000}, {"id": 28, "group": "スピノサウルス", "isSolo": false, "part": "あたま", "name": "スピノサウルスのあたま", "price": 4000}, {"id": 29, "group": "スピノサウルス", "isSolo": false, "part": "からだ", "name": "スピノサウルスのからだ", "price": 3000}, {"id": 30, "group": "スピノサウルス", "isSolo": false, "part": "しっぽ", "name": "スピノサウルスのしっぽ", "price": 2500}, {"id": 31, "group": "スミロドン", "isSolo": false, "part": "あたま", "name": "スミロドンのあたま", "price": 2500}, {"id": 32, "group": "スミロドン", "isSolo": false, "part": "からだ", "name": "スミロドンのからだ", "price": 2000}, {"id": 33, "group": "ダンクルオステウス", "isSolo": true, "part": null, "name": "ダンクルオステウス", "price": 3500}, {"id": 34, "group": "ディノニクス", "isSolo": false, "part": "あたま", "name": "ディノニクスのあたま", "price": 3000}, {"id": 35, "group": "ディノニクス", "isSolo": false, "part": "しっぽ", "name": "ディノニクスのしっぽ", "price": 2500}, {"id": 36, "group": "ディプロドクス", "isSolo": false, "part": "あたま", "name": "ディプロドクスのあたま", "price": 5000}, {"id": 37, "group": "ディプロドクス", "isSolo": false, "part": "くび", "name": "ディプロドクスのくび", "price": 4500}, {"id": 38, "group": "ディプロドクス", "isSolo": false, "part": "むね", "name": "ディプロドクスのむね", "price": 4000}, {"id": 39, "group": "ディプロドクス", "isSolo": false, "part": "こし", "name": "ディプロドクスのこし", "price": 4500}, {"id": 40, "group": "ディプロドクス", "isSolo": false, "part": "しっぽ", "name": "ディプロドクスのしっぽ", "price": 5000}, {"id": 41, "group": "ディプロドクス", "isSolo": false, "part": "しっぽのさき", "name": "ディプロドクスのしっぽのさき", "price": 4000}, {"id": 42, "group": "ディメトロドン", "isSolo": false, "part": "あたま", "name": "ディメトロドンのあたま", "price": 5500}, {"id": 43, "group": "ディメトロドン", "isSolo": false, "part": "からだ", "name": "ディメトロドンのからだ", "price": 5000}, {"id": 44, "group": "トリケラトプス", "isSolo": false, "part": "あたま", "name": "トリケラトプスのあたま", "price": 5500}, {"id": 45, "group": "トリケラトプス", "isSolo": false, "part": "からだ", "name": "トリケラトプスのからだ", "price": 5000}, {"id": 46, "group": "トリケラトプス", "isSolo": false, "part": "しっぽ", "name": "トリケラトプスのしっぽ", "price": 4500}, {"id": 47, "group": "パキケファロ", "isSolo": false, "part": "あたま", "name": "パキケファロのあたま", "price": 4000}, {"id": 48, "group": "パキケファロ", "isSolo": false, "part": "からだ", "name": "パキケファロのからだ", "price": 3500}, {"id": 49, "group": "パラサウロロフス", "isSolo": false, "part": "あたま", "name": "パラサウロロフスのあたま", "price": 3500}, {"id": 50, "group": "パラサウロロフス", "isSolo": false, "part": "からだ", "name": "パラサウロロフスのからだ", "price": 3000}, {"id": 51, "group": "パラサウロロフス", "isSolo": false, "part": "しっぽ", "name": "パラサウロロフスのしっぽ", "price": 2500}, {"id": 52, "group": "フタバサウルス", "isSolo": false, "part": "あたま", "name": "フタバサウルスのあたま", "price": 4000}, {"id": 53, "group": "フタバサウルス", "isSolo": false, "part": "からだ", "name": "フタバサウルスのからだ", "price": 4500}, {"id": 54, "group": "フタバサウルス", "isSolo": false, "part": "しっぽ", "name": "フタバサウルスのしっぽ", "price": 4500}, {"id": 55, "group": "プテラノドン", "isSolo": false, "part": "あたま", "name": "プテラノドンのあたま", "price": 4000}, {"id": 56, "group": "プテラノドン", "isSolo": false, "part": "右翼", "name": "プテラノドンのうよく", "price": 4500}, {"id": 57, "group": "プテラノドン", "isSolo": false, "part": "左翼", "name": "プテラノドンのさよく", "price": 4500}, {"id": 58, "group": "ブラキオサウルス", "isSolo": false, "part": "あたま", "name": "ブラキオサウルスのあたま", "price": 6000}, {"id": 59, "group": "ブラキオサウルス", "isSolo": false, "part": "むね", "name": "ブラキオサウルスのむね", "price": 5500}, {"id": 60, "group": "ブラキオサウルス", "isSolo": false, "part": "こし", "name": "ブラキオサウルスのこし", "price": 5000}, {"id": 61, "group": "ブラキオサウルス", "isSolo": false, "part": "しっぽ", "name": "ブラキオサウルスのしっぽ", "price": 5500}, {"id": 62, "group": "マンモス", "isSolo": false, "part": "あたま", "name": "マンモスのあたま", "price": 3000}, {"id": 63, "group": "マンモス", "isSolo": false, "part": "からだ", "name": "マンモスのからだ", "price": 2500}, {"id": 64, "group": "ミロクンミンギア", "isSolo": true, "part": null, "name": "ミロクンミンギア", "price": 1500}, {"id": 65, "group": "メガセロプス", "isSolo": false, "part": "あたま", "name": "メガセロプスのあたま", "price": 4500}, {"id": 66, "group": "メガセロプス", "isSolo": false, "part": "からだ", "name": "メガセロプスのからだ", "price": 3500}, {"id": 67, "group": "メガセロプス", "isSolo": false, "part": "しっぽ", "name": "メガセロプスのしっぽ", "price": 3000}, {"id": 68, "group": "メガロケロス", "isSolo": false, "part": "左半身", "name": "メガロケロスのひだりはんしん", "price": 4000}, {"id": 69, "group": "メガロケロス", "isSolo": false, "part": "右半身", "name": "メガロケロスのみぎはんしん", "price": 5500}, {"id": 70, "group": "ユーステノプテロン", "isSolo": true, "part": null, "name": "ユーステノプテロン", "price": 2000}, {"id": 71, "group": "Tレックス", "isSolo": false, "part": "あたま", "name": "Tレックスのあたま", "price": 6000}, {"id": 72, "group": "Tレックス", "isSolo": false, "part": "からだ", "name": "Tレックスのからだ", "price": 5500}, {"id": 73, "group": "Tレックス", "isSolo": false, "part": "しっぽ", "name": "Tレックスのしっぽ", "price": 5000}];
+
+function toKatakana(s){
+  return s.replace(/[ぁ-ゖ]/g, ch => String.fromCharCode(ch.charCodeAt(0) + 0x60));
+}
+function normalizeForSearch(s){
+  return toKatakana(s.toLowerCase());
+}
+
+const done = new Set(); // session-only memory, not persisted
+
+let state = { q:"", sort:"group", hideDone:false };
+
+document.getElementById('q').addEventListener('input', e=>{
+  state.q = e.target.value.trim();
+  render();
+});
+document.getElementById('sortSel').addEventListener('change', e=>{
+  state.sort = e.target.value;
+  render();
+});
+document.getElementById('hideDone').addEventListener('change', e=>{
+  state.hideDone = e.target.checked;
+  render();
+});
+
+function sortComparator(a, b){
+  if(state.sort==='price-desc') return b.price - a.price;
+  if(state.sort==='price-asc') return a.price - b.price;
+  if(state.sort==='name-asc') return a.name.localeCompare(b.name,'ja');
+  return 0;
+}
+
+function partRowHtml(d){
+  const isDone = done.has(d.id);
+  return `
+    <div class="part-row ${isDone?'done':''}">
+      <input type="checkbox" class="catch-check" ${isDone?'checked':''} data-id="${d.id}" title="収集済み">
+      <div class="part-main">
+        <div class="part-top">
+          <div class="part-name">${d.name}${d.part ? `<span class="part-tag">（${d.part}）</span>` : ''}</div>
+          <div class="price">${d.price.toLocaleString()}<small> ベル</small></div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function groupCardHtml(groupName, items){
+  const doneN = items.filter(d => done.has(d.id)).length;
+  const total = items.length;
+  const complete = doneN === total;
+  return `
+    <div class="group-card">
+      <div class="group-head">
+        <div class="gname">🦴 ${groupName}</div>
+        <div class="group-progress ${complete?'complete':''}">${complete?'✓ ':''}${doneN} / ${total}</div>
+      </div>
+      ${items.map(partRowHtml).join('')}
+    </div>
+  `;
+}
+
+function render(){
+  const list = document.getElementById('list');
+  const q = normalizeForSearch(state.q);
+  let items = DATA.filter(d=>{
+    if(q && !normalizeForSearch(d.name).includes(q)) return false;
+    if(state.hideDone && done.has(d.id)) return false;
+    return true;
+  });
+
+  document.getElementById('countLine').textContent = `${items.length} 件表示中（全${DATA.length}件）`;
+  document.getElementById('emptyMsg').style.display = items.length ? 'none' : 'block';
+
+  const doneTotal = DATA.filter(d => done.has(d.id)).length;
+  document.getElementById('doneCount').textContent = doneTotal;
+  document.getElementById('donePct').textContent = Math.round(doneTotal / DATA.length * 100);
+  document.getElementById('progressFill').style.width = (doneTotal / DATA.length * 100) + '%';
+
+  let html = '';
+
+  if(state.sort === 'group' && !q){
+    // グループ順表示：同じ仲間をひとつのカードにまとめる。DATA内の出現順＝グループ内の順序を保つ。
+    const groups = [];
+    const seen = new Map();
+    items.forEach(d=>{
+      if(!seen.has(d.group)){
+        seen.set(d.group, []);
+        groups.push(d.group);
+      }
+      seen.get(d.group).push(d);
+    });
+    groups.sort((a,b)=> a.localeCompare(b,'ja'));
+    html = groups.map(g => groupCardHtml(g, seen.get(g))).join('');
+  }else if(q){
+    // 検索時は完全一致を最優先、部分一致は検索語が名前の何文字目に出てくるかで並べ、
+    // 同じ位置どうしは選択中のソート順で並べる（メインツールと同じ考え方）。
+    const exact = items.filter(d => normalizeForSearch(d.name) === q).sort(sortComparator);
+    const partial = items.filter(d => normalizeForSearch(d.name) !== q).sort((a,b)=>{
+      const idxA = normalizeForSearch(a.name).indexOf(q);
+      const idxB = normalizeForSearch(b.name).indexOf(q);
+      if(idxA !== idxB) return idxA - idxB;
+      return sortComparator(a,b);
+    });
+    const groups = [exact, partial];
+    html = groups.map((group, gi) => {
+      if(group.length === 0) return '';
+      const spacer = (gi > 0 && groups[0].length > 0) ? '<div class="group-gap"></div>' : '';
+      return spacer + `<div class="group-card">` + group.map(partRowHtml).join('') + `</div>`;
+    }).join('');
+  }else{
+    items.sort(sortComparator);
+    html = `<div class="group-card">` + items.map(partRowHtml).join('') + `</div>`;
+  }
+
+  list.innerHTML = html;
+
+  list.querySelectorAll('.catch-check').forEach(cb=>{
+    cb.addEventListener('change', e=>{
+      const id = Number(e.target.dataset.id);
+      if(e.target.checked) done.add(id); else done.delete(id);
+      render();
+    });
+  });
+}
+
+render();
+
+const topBtn = document.getElementById('topBtn');
+window.addEventListener('scroll', ()=>{
+  topBtn.style.display = window.scrollY > 400 ? 'block' : 'none';
+});
+topBtn.addEventListener('click', ()=> window.scrollTo({top:0, behavior:'smooth'}));
+
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>
