@@ -795,25 +795,32 @@ function render(){
     return true;
   });
 
-  items.sort((a,b)=>{
+  function sortComparator(a, b){
     if(state.sort==='price-desc') return b.price - a.price;
     if(state.sort==='price-asc') return a.price - b.price;
     if(state.sort==='name-asc') return a.name.localeCompare(b.name,'ja');
     return 0;
-  });
+  }
 
   document.getElementById('countLine').textContent = `${items.length} 件表示中（全${DATA.length}件）`;
   document.getElementById('emptyMsg').style.display = items.length ? 'none' : 'block';
 
   // 検索語があるときは、完全一致を並び順（価格・名前など）に関係なく最優先で先頭に表示し、
-  // 少し間隔をあけてから部分一致を続ける。検索語がなければ通常のソート順のまま。
+  // 少し間隔をあけてから部分一致を続ける。部分一致は「検索語が名前の何文字目に出てくるか」を
+  // 優先的に並べ（1文字目に出てくるもの→2文字目...の順）、同じ位置どうしは選択中のソート
+  // （価格順・名前順）で並べる。検索語がなければ通常のソート順のまま。
   let groups;
   if(q){
-    const exact = items.filter(d => normalizeForSearch(d.name) === q);
-    const partial = items.filter(d => normalizeForSearch(d.name) !== q);
+    const exact = items.filter(d => normalizeForSearch(d.name) === q).sort(sortComparator);
+    const partial = items.filter(d => normalizeForSearch(d.name) !== q).sort((a,b)=>{
+      const idxA = normalizeForSearch(a.name).indexOf(q);
+      const idxB = normalizeForSearch(b.name).indexOf(q);
+      if(idxA !== idxB) return idxA - idxB;
+      return sortComparator(a,b);
+    });
     groups = [exact, partial];
   }else{
-    groups = [items];
+    groups = [items.sort(sortComparator)];
   }
 
   list.innerHTML = groups.map((group, gi) => {
