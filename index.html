@@ -49,17 +49,33 @@
     font-size: .82rem;
     opacity: .9;
   }
-  .nav-link{
-    display:inline-block;
-    margin-top:8px;
-    font-size:.78rem;
-    color:#fff;
-    background: rgba(255,255,255,0.18);
-    padding: 4px 11px;
+  .page-nav{
+    display:flex;
+    gap:4px;
+    margin-top:10px;
+    background: rgba(255,255,255,0.16);
     border-radius: 999px;
-    text-decoration:none;
+    padding: 3px;
   }
-  .nav-link:hover{ background: rgba(255,255,255,0.28); }
+  .page-nav-tab{
+    flex:1;
+    text-align:center;
+    padding:7px 10px;
+    border-radius:999px;
+    font-size:.8rem;
+    font-weight:600;
+    color:#fff;
+    text-decoration:none;
+    opacity:.85;
+    transition: all .15s ease;
+  }
+  a.page-nav-tab:hover{ opacity:1; background: rgba(255,255,255,0.14); }
+  .page-nav-tab.active{
+    background:#fff;
+    color: var(--accent-dark);
+    opacity:1;
+    cursor:default;
+  }
   .wrap{
     max-width: 760px;
     margin: 0 auto;
@@ -498,7 +514,10 @@
   <div class="wrap">
     <h1>🌱 あつ森 売値サーチ</h1>
     <p id="subhead">虫・魚・海の幸をすぐ検索 ／ 北半球設定</p>
-    <a class="nav-link" href="fossil.html">🦴 化石図鑑（取得状況）を見る →</a>
+    <nav class="page-nav">
+      <span class="page-nav-tab active">🐛 虫・魚・海の幸</span>
+      <a class="page-nav-tab" href="fossil.html">🦴 化石</a>
+    </nav>
   </div>
 </header>
 
