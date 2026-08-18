@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>あつ森 DIYの売値サーチ</title>
+<meta name="theme-color" content="#5b4a96">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<style>
+  :root{
+    --bg: #f1eefc;
+    --card: #ffffff;
+    --ink: #332f45;
+    --ink-soft: #726d8a;
+    --accent: #7a63c9;
+    --accent-dark: #5b4a96;
+    --accent-soft: #e9e4fb;
+    --line: #ddd6f5;
+    --gold: #c8912a;
+    --blue: #3f7fb0;
+    --radius: 14px;
+    --shadow: 0 2px 10px rgba(51,47,69,0.08);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family: "Hiragino Sans", "Yu Gothic", "Segoe UI", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    padding-bottom: 40px;
+  }
+  header{
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+    color: #fff;
+    padding: 20px 16px 22px;
+    border-radius: 0 0 20px 20px;
+    box-shadow: var(--shadow);
+  }
+  header h1{
+    margin: 0 0 4px;
+    font-size: 1.35rem;
+    letter-spacing: .02em;
+  }
+  header p{
+    margin: 0;
+    font-size: .82rem;
+    line-height: 1.45;
+    min-height: calc(1.45em * 2); /* 2行分の高さを常に確保し、文言の折り返し有無でナビバーの位置がずれないようにする */
+    opacity: .9;
+  }
+  .page-nav{
+    display:flex;
+    gap:4px;
+    margin-top:10px;
+    background: rgba(255,255,255,0.16);
+    border-radius: 999px;
+    padding: 3px;
+  }
+  .page-nav-tab{
+    flex:1;
+    text-align:center;
+    padding:7px 6px;
+    border-radius:999px;
+    font-size:.78rem;
+    font-weight:600;
+    color:#fff;
+    text-decoration:none;
+    opacity:.85;
+    white-space:nowrap;
+    transition: all .15s ease;
+  }
+  a.page-nav-tab:hover{ opacity:1; background: rgba(255,255,255,0.14); }
+  .page-nav-tab.active{
+    background:#fff;
+    color: var(--accent-dark);
+    opacity:1;
+    cursor:default;
+  }
+  .wrap{
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 0 14px;
+  }
+  .panel{
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 14px;
+    margin-top: -14px;
+    position: relative;
+    z-index: 2;
+  }
+  .search-row{ display:flex; gap:8px; }
+  .search-row input[type=text]{
+    flex:1;
+    padding: 11px 14px;
+    border-radius: 999px;
+    border: 1.5px solid var(--line);
+    font-size: 1rem;
+    outline:none;
+    background:#fbfaff;
+  }
+  .search-row input[type=text]:focus{ border-color: var(--accent); }
+  .chip-row{
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+    margin-top:10px;
+  }
+  .chip{
+    border:1.5px solid var(--line);
+    background:#fbfaff;
+    color: var(--ink-soft);
+    padding:6px 13px;
+    border-radius:999px;
+    font-size:.8rem;
+    cursor:pointer;
+    user-select:none;
+    transition: all .15s ease;
+    white-space:nowrap;
+  }
+  .chip:hover{ border-color: var(--accent); }
+  .chip.active{
+    background: var(--accent);
+    border-color: var(--accent);
+    color:#fff;
+    font-weight:600;
+  }
+  .toggle-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-top:12px;
+    flex-wrap:wrap;
+  }
+  select{
+    padding:7px 10px;
+    border-radius:8px;
+    border:1.5px solid var(--line);
+    background:#fbfaff;
+    color:var(--ink);
+    font-size:.85rem;
+  }
+  .count-line{
+    font-size:.8rem;
+    color: var(--ink-soft);
+    margin-top:10px;
+  }
+  .list{
+    margin-top:12px;
+    display:flex;
+    flex-direction:column;
+    gap:9px;
+  }
+  .card{
+    background: var(--card);
+    border:1px solid var(--line);
+    border-radius: 12px;
+    padding: 11px 13px;
+    display:flex;
+    gap:12px;
+    align-items:center;
+    box-shadow: 0 1px 4px rgba(51,47,69,0.05);
+  }
+  .cat-badge{
+    flex:0 0 auto;
+    width:38px;height:38px;
+    border-radius:10px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:1.1rem;
+    background: var(--accent-soft);
+  }
+  .card-main{ flex:1; min-width:0; display:flex; align-items:baseline; justify-content:space-between; gap:8px; flex-wrap:wrap; }
+  .name{ font-weight:700; font-size:.98rem; }
+  .cat-tag{
+    display:block;
+    font-size:.68rem;
+    color: var(--ink-soft);
+    font-weight:600;
+    margin-top:2px;
+  }
+  .price{
+    font-weight:800;
+    font-size:1.05rem;
+    color: var(--accent-dark);
+    white-space:nowrap;
+  }
+  .price small{ font-weight:600; font-size:.72rem; color: var(--ink-soft); }
+  .price.unsellable{
+    font-size:.8rem;
+    font-weight:700;
+    color: var(--ink-soft);
+  }
+  .empty{
+    text-align:center;
+    color: var(--ink-soft);
+    padding:40px 10px;
+    font-size:.9rem;
+  }
+  .group-gap{
+    height:26px;
+    position:relative;
+  }
+  .group-gap::after{
+    content:"";
+    position:absolute;
+    left:0; right:0; top:50%;
+    border-top:1px dashed var(--line);
+  }
+  footer{
+    max-width:760px;
+    margin: 24px auto 0;
+    padding: 0 18px;
+    font-size:.72rem;
+    color: var(--ink-soft);
+    line-height:1.6;
+  }
+  .top-btn{
+    position:fixed;
+    right:16px;
+    bottom:16px;
+    background:var(--accent);
+    color:#fff;
+    border:none;
+    width:44px;height:44px;
+    border-radius:50%;
+    font-size:1.1rem;
+    box-shadow: var(--shadow);
+    cursor:pointer;
+    display:none;
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>🔨 あつ森 DIYの売値サーチ</h1>
+    <p id="subhead">DIYレシピで作れる家具・道具・料理などの売値をすぐ検索 ／ 全924種類</p>
+    <nav class="page-nav">
+      <a class="page-nav-tab" href="index.html">🐛 生き物</a>
+      <a class="page-nav-tab" href="fossil.html">🦴 化石</a>
+      <span class="page-nav-tab active">🔨 DIY</span>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="panel">
+    <div class="search-row">
+      <input type="text" id="q" placeholder="名前で検索（例：もくせいスツール）" autocomplete="off">
+    </div>
+    <div class="chip-row" id="catChips"></div>
+    <div class="toggle-row">
+      <select id="sortSel">
+        <option value="price-desc">売値が高い順</option>
+        <option value="price-asc">売値が低い順</option>
+        <option value="name-asc">名前順</option>
+      </select>
+    </div>
+    <div class="count-line" id="countLine"></div>
+  </div>
+
+  <div class="list" id="list"></div>
+  <div class="empty" id="emptyMsg" style="display:none;">見つかりませんでした。検索語やカテゴリを変えてみてください。</div>
+</div>
+
+<button class="top-btn" id="topBtn">↑</button>
+
+<footer>
+  <p>🔨 DIYレシピで作れる家具・道具・壁紙・床・ラグ・衣装・料理などをまとめて検索できます。ここでの売値は、作った完成品をタヌキ商店で売却したときの基本価格です（レシピカード自体の売値ではありません）。</p>
+  <p>🧱 マイデザ機能の「はしら」「しきりカウンター」など一部の地形パーツ（24件）は、そもそも売却の対象外のため「売却不可」と表示しています。</p>
+  <p>📶 表示件数が多いため、まずカテゴリや検索で絞り込むと見やすくなります。</p>
+  <p>データ出典: コミュニティのデータマイニング情報（npm「animal-crossing」パッケージ／各種公開スプレッドシート）を基に作成（2026年08月18日 時点）。ゲームアップデートで変更される場合があります。</p>
+</footer>
+
+<script>
+const DATA = [{"id": 1, "name": "アクエリアスのみずがめ", "price": 22125, "category": "家具"}, {"id": 2, "name": "アリエスのもくば", "price": 12125, "category": "家具"}, {"id": 3, "name": "イースターなアーチ", "price": 4800, "category": "家具"}, {"id": 4, "name": "イースターなバッグ", "price": 2400, "category": "身につけるもの"}, {"id": 5, "name": "イースターなベッド", "price": 2400, "category": "家具"}, {"id": 6, "name": "イースターなかんむり", "price": 2400, "category": "身につけるもの"}, {"id": 7, "name": "イースターなさく", "price": 240, "category": "その他"}, {"id": 8, "name": "イースターなバルーンB", "price": 1200, "category": "家具"}, {"id": 9, "name": "イースターなゆか", "price": 4800, "category": "ゆか"}, {"id": 10, "name": "イースターなライトガーランド", "price": 2400, "category": "壁掛け家具"}, {"id": 11, "name": "イースターなランプ", "price": 1600, "category": "雑貨・小物"}, {"id": 12, "name": "イースターなバルーンA", "price": 1200, "category": "家具"}, {"id": 13, "name": "イースターなラグ", "price": 2400, "category": "ラグ・じゅうたん"}, {"id": 14, "name": "イースターなスツール", "price": 1200, "category": "家具"}, {"id": 15, "name": "イースターなテーブル", "price": 1600, "category": "家具"}, {"id": 16, "name": "イースターなドレッサー", "price": 1600, "category": "家具"}, {"id": 17, "name": "イースターなかべがみ", "price": 4800, "category": "壁紙"}, {"id": 18, "name": "イースターなウォールクロック", "price": 1200, "category": "壁掛け家具"}, {"id": 19, "name": "イースターなステッキ", "price": 11100, "category": "どうぐ"}, {"id": 20, "name": "イースターなクロゼット", "price": 1600, "category": "家具"}, {"id": 21, "name": "イースターなリース", "price": 2400, "category": "壁掛け家具"}, {"id": 22, "name": "キャンサーのテーブル", "price": 21975, "category": "家具"}, {"id": 23, "name": "カプリコーンのおきもの", "price": 22650, "category": "家具"}, {"id": 24, "name": "DIYさぎょうだい", "price": 6630, "category": "家具"}, {"id": 25, "name": "ジェミニのクロゼット", "price": 22200, "category": "家具"}, {"id": 26, "name": "クリスマスなかべ", "price": 2500, "category": "壁紙"}, {"id": 27, "name": "ツタンカーメン", "price": 50000, "category": "身につけるもの"}, {"id": 28, "name": "レオのちょうこく", "price": 21975, "category": "壁掛け家具"}, {"id": 29, "name": "リブラのてんびん", "price": 21750, "category": "雑貨・小物"}, {"id": 30, "name": "ピスケスのランプ", "price": 22050, "category": "家具"}, {"id": 31, "name": "ハトのすサブレ", "price": 950, "category": "料理（デザート・飲み物）"}, {"id": 32, "name": "サジタリアスのや", "price": 21750, "category": "壁掛け家具"}, {"id": 33, "name": "スコーピオのランプ", "price": 22125, "category": "雑貨・小物"}, {"id": 34, "name": "タウラスのバスタブ", "price": 12350, "category": "家具"}, {"id": 35, "name": "サンクスギビングなキャセロール", "price": 1750, "category": "雑貨・小物"}, {"id": 36, "name": "サンクスギビングなチェア", "price": 550, "category": "家具"}, {"id": 37, "name": "サンクスギビングデコレーション", "price": 500, "category": "雑貨・小物"}, {"id": 38, "name": "サンクスギビングベーススタンド", "price": 900, "category": "家具"}, {"id": 39, "name": "サンクスギビングなだんろ", "price": 3250, "category": "家具"}, {"id": 40, "name": "サンクスギビングなテーブル", "price": 1125, "category": "家具"}, {"id": 41, "name": "サンクスギビングテーブルウェア", "price": 1000, "category": "雑貨・小物"}, {"id": 42, "name": "サンクスギビングなむぎかざり", "price": 200, "category": "雑貨・小物"}, {"id": 43, "name": "ヴァルゴのハープ", "price": 22050, "category": "家具"}, {"id": 44, "name": "どんぐりポシェット", "price": 2400, "category": "身につけるもの"}, {"id": 45, "name": "どんぐりのラグ", "price": 2400, "category": "ラグ・じゅうたん"}, {"id": 46, "name": "アコースティックギター", "price": 3210, "category": "家具"}, {"id": 47, "name": "アジのフライ", "price": 540, "category": "料理（お食事）"}, {"id": 48, "name": "アンチョビのアヒージョ", "price": 600, "category": "料理（お食事）"}, {"id": 49, "name": "ナナメのみちしるべ", "price": 600, "category": "家具"}, {"id": 50, "name": "リンゴのチェア", "price": 2480, "category": "家具"}, {"id": 51, "name": "リンゴのふく", "price": 1600, "category": "身につけるもの"}, {"id": 52, "name": "リンゴのぼうし", "price": 1000, "category": "身につけるもの"}, {"id": 53, "name": "リンゴジャム", "price": 450, "category": "料理（お食事）"}, {"id": 54, "name": "アップルゼリー", "price": 300, "category": "料理（デザート・飲み物）"}, {"id": 55, "name": "アップルパイ", "price": 1880, "category": "料理（デザート・飲み物）"}, {"id": 56, "name": "リンゴのラグ", "price": 1200, "category": "ラグ・じゅうたん"}, {"id": 57, "name": "リンゴスムージー", "price": 300, "category": "料理（デザート・飲み物）"}, {"id": 58, "name": "リンゴのタルト", "price": 780, "category": "料理（デザート・飲み物）"}, {"id": 59, "name": "リンゴのかさ", "price": 1400, "category": "身につけるもの"}, {"id": 60, "name": "リンゴのかべがみ", "price": 4000, "category": "壁紙"}, {"id": 61, "name": "アイアンアーマーシューズ", "price": 3000, "category": "身につけるもの"}, {"id": 62, "name": "アロマポット", "price": 600, "category": "雑貨・小物"}, {"id": 63, "name": "いんせき", "price": 4000, "category": "家具"}, {"id": 64, "name": "アストロノーツ", "price": 6250, "category": "家具"}, {"id": 65, "name": "こうようのかべ", "price": 4700, "category": "壁紙"}, {"id": 66, "name": "オノ", "price": 625, "category": "どうぐ"}, {"id": 67, "name": "しばふのゆか", "price": 600, "category": "ゆか"}, {"id": 68, "name": "じゃがバター", "price": 840, "category": "料理（お食事）"}, {"id": 69, "name": "たけのかご", "price": 1120, "category": "家具"}, {"id": 70, "name": "たけのベンチ", "price": 1280, "category": "家具"}, {"id": 71, "name": "たけのキャンドルホルダー", "price": 880, "category": "雑貨・小物"}, {"id": 72, "name": "たけのビックリばこ", "price": 2400, "category": "家具"}, {"id": 73, "name": "バンブードラム", "price": 720, "category": "雑貨・小物"}, {"id": 74, "name": "たけのフロアスタンド", "price": 1280, "category": "家具"}, {"id": 75, "name": "バンブーなゆか", "price": 2400, "category": "ゆか"}, {"id": 76, "name": "かさぼうし", "price": 200, "category": "身につけるもの"}, {"id": 77, "name": "たけがき", "price": 96, "category": "その他"}, {"id": 78, "name": "たけのべんとうばこ", "price": 640, "category": "雑貨・小物"}, {"id": 79, "name": "ながしそうめん", "price": 3160, "category": "家具"}, {"id": 80, "name": "たけのスクリーン", "price": 2020, "category": "家具"}, {"id": 81, "name": "たけのシェルフ", "price": 2400, "category": "家具"}, {"id": 82, "name": "たけのスピーカー", "price": 1230, "category": "家具"}, {"id": 83, "name": "たけのまり", "price": 480, "category": "雑貨・小物"}, {"id": 84, "name": "たけのスツール", "price": 800, "category": "家具"}, {"id": 85, "name": "たけのくるまどめ", "price": 480, "category": "家具"}, {"id": 86, "name": "バンブーなかべ", "price": 2400, "category": "壁紙"}, {"id": 87, "name": "たけのいちりんざし", "price": 160, "category": "壁掛け家具"}, {"id": 88, "name": "たけのステッキ", "price": 3900, "category": "どうぐ"}, {"id": 89, "name": "ちくりんのかべ", "price": 4300, "category": "壁紙"}, {"id": 90, "name": "たけのこランプ", "price": 4900, "category": "雑貨・小物"}, {"id": 91, "name": "たけのこスープ", "price": 1000, "category": "料理（お食事）"}, {"id": 92, "name": "すだれのさく", "price": 48, "category": "その他"}, {"id": 93, "name": "ゆうしてっせん", "price": 198, "category": "その他"}, {"id": 94, "name": "バーベル", "price": 7500, "category": "家具"}, {"id": 95, "name": "イシダイのカルパッチョ", "price": 6000, "category": "料理（お食事）"}, {"id": 96, "name": "たる", "price": 2100, "category": "家具"}, {"id": 97, "name": "ちかしつのゆか", "price": 1500, "category": "ゆか"}, {"id": 98, "name": "しょいこ", "price": 2400, "category": "身につけるもの"}, {"id": 99, "name": "ようほうばこ", "price": 2400, "category": "家具"}, {"id": 100, "name": "おおきなクリスマスツリー", "price": 3200, "category": "家具"}, {"id": 101, "name": "バードバス", "price": 900, "category": "家具"}, {"id": 102, "name": "とりかご", "price": 960, "category": "家具"}, {"id": 103, "name": "すばこ", "price": 840, "category": "家具"}, {"id": 104, "name": "ブロックべい", "price": 270, "category": "その他"}, {"id": 105, "name": "おはなみのちょうちん", "price": 2880, "category": "家具"}, {"id": 106, "name": "バラのかんむり・ブルー", "price": 12000, "category": "身につけるもの"}, {"id": 107, "name": "あおいバラのリース", "price": 20000, "category": "壁掛け家具"}, {"id": 108, "name": "ボーンなドアプレート", "price": 360, "category": "壁掛け家具"}, {"id": 109, "name": "キャンプファイア", "price": 1230, "category": "家具"}, {"id": 110, "name": "ぼんさいだな", "price": 8460, "category": "家具"}, {"id": 111, "name": "ブーメラン", "price": 360, "category": "壁掛け家具"}, {"id": 112, "name": "はこイス", "price": 720, "category": "家具"}, {"id": 113, "name": "パン", "price": 950, "category": "料理（お食事）"}, {"id": 114, "name": "パングラタン", "price": 1260, "category": "料理（お食事）"}, {"id": 115, "name": "レンガのカベ", "price": 120, "category": "その他"}, {"id": 116, "name": "いしがま", "price": 3820, "category": "家具"}, {"id": 117, "name": "レンガのはしら", "price": null, "category": "その他"}, {"id": 118, "name": "レンガのいど", "price": 2800, "category": "家具"}, {"id": 119, "name": "はしのこうじキット", "price": null, "category": "その他"}, {"id": 120, "name": "ちゃいろいヘリンボーンのかべ", "price": 1800, "category": "壁紙"}, {"id": 121, "name": "こくとう", "price": 210, "category": "料理（お食事）"}, {"id": 122, "name": "こくとうカップケーキ", "price": 630, "category": "料理（デザート・飲み物）"}, {"id": 123, "name": "こくとうパウンドケーキ", "price": 950, "category": "料理（デザート・飲み物）"}, {"id": 124, "name": "バターかくはんき", "price": 1980, "category": "家具"}, {"id": 125, "name": "ログハウスのかべ", "price": 1800, "category": "壁紙"}, {"id": 126, "name": "ケークサレ", "price": 1680, "category": "料理（デザート・飲み物）"}, {"id": 127, "name": "たきび", "price": 30, "category": "家具"}, {"id": 128, "name": "キャンプサイトこうじキット", "price": null, "category": "その他"}, {"id": 129, "name": "ダンボールベッド", "price": 240, "category": "家具"}, {"id": 130, "name": "ダンボールチェア", "price": 60, "category": "家具"}, {"id": 131, "name": "ダンボールソファ", "price": 120, "category": "家具"}, {"id": 132, "name": "ダンボールテーブル", "price": 240, "category": "家具"}, {"id": 133, "name": "まないたのうえのこい", "price": 720, "category": "雑貨・小物"}, {"id": 134, "name": "ホタテのカルパッチョ", "price": 2880, "category": "料理（お食事）"}, {"id": 135, "name": "カジキのカルパッチョ", "price": 12000, "category": "料理（お食事）"}, {"id": 136, "name": "サーモンのカルパッチョ", "price": 840, "category": "料理（お食事）"}, {"id": 137, "name": "ニンジンのベーグルサンド", "price": 2210, "category": "料理（お食事）"}, {"id": 138, "name": "キャロットケーキ", "price": 1160, "category": "料理（デザート・飲み物）"}, {"id": 139, "name": "キャロットジュース", "price": 840, "category": "料理（デザート・飲み物）"}, {"id": 140, "name": "ニンジンのポタージュ", "price": 1370, "category": "料理（お食事）"}, {"id": 141, "name": "キャロットスコーン", "price": 2000, "category": "料理（デザート・飲み物）"}, {"id": 142, "name": "ニンジンのはっぱカレー", "price": 2520, "category": "料理（お食事）"}, {"id": 143, "name": "どうくつ", "price": 6500, "category": "家具"}, {"id": 144, "name": "キノコのアヒージョ", "price": 20040, "category": "料理（お食事）"}, {"id": 145, "name": "さくらんぼのふく", "price": 1600, "category": "身につけるもの"}, {"id": 146, "name": "さくらんぼのぼうし", "price": 1000, "category": "身につけるもの"}, {"id": 147, "name": "チェリージャム", "price": 450, "category": "料理（お食事）"}, {"id": 148, "name": "さくらんぼゼリー", "price": 300, "category": "料理（デザート・飲み物）"}, {"id": 149, "name": "さくらんぼのランプ", "price": 2400, "category": "壁掛け家具"}, {"id": 150, "name": "チェリーパイ", "price": 1880, "category": "料理（デザート・飲み物）"}, {"id": 151, "name": "さくらんぼのラグ", "price": 1200, "category": "ラグ・じゅうたん"}, {"id": 152, "name": "さくらんぼスムージー", "price": 300, "category": "料理（デザート・飲み物）"}, {"id": 153, "name": "さくらんぼのスピーカー", "price": 3500, "category": "雑貨・小物"}, {"id": 154, "name": "チェリータルト", "price": 780, "category": "料理（デザート・飲み物）"}, {"id": 155, "name": "さくらんぼのかさ", "price": 1400, "category": "身につけるもの"}, {"id": 156, "name": "さくらんぼのかべがみ", "price": 4000, "category": "壁紙"}, {"id": 157, "name": "さくらのぼんさい", "price": 3300, "category": "雑貨・小物"}, {"id": 158, "name": "さくらのえだ", "price": 4240, "category": "家具"}, {"id": 159, "name": "さくらクロック", "price": 2750, "category": "壁掛け家具"}, {"id": 160, "name": "さくらのじゅうたん", "price": 4400, "category": "ゆか"}, {"id": 161, "name": "さくらのポシェット", "price": 2400, "category": "身につけるもの"}, {"id": 162, "name": "いしのみずうけ～さくら～", "price": 2700, "category": "家具"}, {"id": 163, "name": "さくらのラグ", "price": 2400, "category": "ラグ・じゅうたん"}, {"id": 164, "name": "さくらのかさ", "price": 2800, "category": "身につけるもの"}, {"id": 165, "name": "さくらのステッキ", "price": 2700, "category": "どうぐ"}, {"id": 166, "name": "さくらのはなびらのやま", "price": 2000, "category": "家具"}, {"id": 167, "name": "さくらなみきのかべ", "price": 4600, "category": "壁紙"}, {"id": 168, "name": "シックなコスモスのリース", "price": 4800, "category": "壁掛け家具"}, {"id": 169, "name": "キクのかんむり・シック", "price": 960, "category": "身につけるもの"}, {"id": 170, "name": "バラのかんむり・シック", "price": 2880, "category": "身につけるもの"}, {"id": 171, "name": "チューリップのかんむり・シック", "price": 1440, "category": "身につけるもの"}, {"id": 172, "name": "シックなアネモネのリース", "price": 4800, "category": "壁掛け家具"}, {"id": 173, "name": "こげちゃのヘリンボーンのかべ", "price": 1800, "category": "壁紙"}, {"id": 174, "name": "ておしぐるま", "price": 960, "category": "家具"}, {"id": 175, "name": "クラムチャウダー", "price": 1020, "category": "料理（お食事）"}, {"id": 176, "name": "とうきのジャグ", "price": 800, "category": "雑貨・小物"}, {"id": 177, "name": "ライブラリーなかべ", "price": 1450, "category": "壁紙"}, {"id": 178, "name": "ものほしロープ", "price": 100, "category": "家具"}, {"id": 179, "name": "ココナッツクッキー", "price": 1010, "category": "料理（デザート・飲み物）"}, {"id": 180, "name": "ココナッツジュース", "price": 500, "category": "雑貨・小物"}, {"id": 181, "name": "ココナッツミルク", "price": 750, "category": "料理（デザート・飲み物）"}, {"id": 182, "name": "ココナッツオイル", "price": 1130, "category": "料理（お食事）"}, {"id": 183, "name": "ココナッツのパンケーキ", "price": 2010, "category": "料理（デザート・飲み物）"}, {"id": 184, "name": "ココナッツプリン", "price": 1070, "category": "料理（デザート・飲み物）"}, {"id": 185, "name": "ヤシのウォールプランター", "price": 600, "category": "壁掛け家具"}, {"id": 186, "name": "こうようのゆか", "price": 4300, "category": "ゆか"}, {"id": 187, "name": "コンクリートのはしら", "price": null, "category": "その他"}, {"id": 188, "name": "クッキー", "price": 630, "category": "料理（デザート・飲み物）"}, {"id": 189, "name": "ヒヤシンスのかんむり・クール", "price": 1280, "category": "身につけるもの"}, {"id": 190, "name": "クールなヒヤシンスのリース", "price": 1440, "category": "壁掛け家具"}, {"id": 191, "name": "パンジーのかんむり・クール", "price": 960, "category": "身につけるもの"}, {"id": 192, "name": "クールなパンジーのリース", "price": 4800, "category": "壁掛け家具"}, {"id": 193, "name": "アネモネのかんむり・クール", "price": 960, "category": "身につけるもの"}, {"id": 194, "name": "クールなアネモネのリース", "price": 1200, "category": "壁掛け家具"}, {"id": 195, "name": "よこいたのさく", "price": 72, "category": "その他"}, {"id": 196, "name": "トタンのさく", "price": 261, "category": "その他"}, {"id": 197, "name": "コスモスのかんむり", "price": 560, "category": "身につけるもの"}, {"id": 198, "name": "コスモスのシャワー", "price": 3050, "category": "家具"}, {"id": 199, "name": "コスモスのステッキ", "price": 1580, "category": "どうぐ"}, {"id": 200, "name": "コスモスのリース", "price": 720, "category": "壁掛け家具"}, {"id": 201, "name": "まるたのさく", "price": 72, "category": "その他"}, {"id": 202, "name": "みかづきチェア", "price": 8500, "category": "家具"}, {"id": 203, "name": "エンブレムなドアプレート", "price": 3000, "category": "壁掛け家具"}, {"id": 204, "name": "ゆうじんうちゅうせん", "price": 20000, "category": "家具"}, {"id": 205, "name": "ユリのかんむり・キュート", "price": 800, "category": "身につけるもの"}, {"id": 206, "name": "バラのかんむり・キュート", "price": 960, "category": "身につけるもの"}, {"id": 207, "name": "カッティングボード", "price": 990, "category": "雑貨・小物"}, {"id": 208, "name": "ダークなバンブーバスマット", "price": 480, "category": "ラグ・じゅうたん"}, {"id": 209, "name": "ダークなバンブーラグ", "price": 960, "category": "ラグ・じゅうたん"}, {"id": 210, "name": "コスモスのかんむり・ダーク", "price": 3360, "category": "身につけるもの"}, {"id": 211, "name": "ユリのかんむり・ダーク", "price": 960, "category": "身につけるもの"}, {"id": 212, "name": "ダークなユリのリース", "price": 1600, "category": "壁掛け家具"}, {"id": 213, "name": "ダークなバラのリース", "price": 4320, "category": "壁掛け家具"}, {"id": 214, "name": "チューリップのかんむり・ダーク", "price": 800, "category": "身につけるもの"}, {"id": 215, "name": "ダークなチューリップのリース", "price": 1600, "category": "壁掛け家具"}, {"id": 216, "name": "ダークなよせぎのかべ", "price": 1800, "category": "壁紙"}, {"id": 217, "name": "くちはてたき", "price": 1200, "category": "家具"}, {"id": 218, "name": "デコイ", "price": 480, "category": "雑貨・小物"}, {"id": 219, "name": "しかのオブジェ", "price": 960, "category": "壁掛け家具"}, {"id": 220, "name": "ししおどし", "price": 1740, "category": "家具"}, {"id": 221, "name": "せかいのみちしるべ", "price": 1440, "category": "家具"}, {"id": 222, "name": "ダルマ", "price": 3630, "category": "雑貨・小物"}, {"id": 223, "name": "しょるいのやま", "price": 400, "category": "雑貨・小物"}, {"id": 224, "name": "いぬごや", "price": 2040, "category": "家具"}, {"id": 225, "name": "ぼきんばこ", "price": 960, "category": "雑貨・小物"}, {"id": 226, "name": "みずのみば", "price": 2700, "category": "家具"}, {"id": 227, "name": "じめんのたまごのふく", "price": 1200, "category": "身につけるもの"}, {"id": 228, "name": "じめんのたまごのから", "price": 800, "category": "身につけるもの"}, {"id": 229, "name": "じめんのたまごのくつ", "price": 800, "category": "身につけるもの"}, {"id": 230, "name": "たまごのパーティーワンピ", "price": 7200, "category": "身につけるもの"}, {"id": 231, "name": "たまごのパーティーハット", "price": 4800, "category": "身につけるもの"}, {"id": 232, "name": "ゆきのふるかべ", "price": 2700, "category": "壁紙"}, {"id": 233, "name": "ファンシーなユリのリース", "price": 1200, "category": "壁掛け家具"}, {"id": 234, "name": "ファンシーなキクのリース", "price": 1200, "category": "壁掛け家具"}, {"id": 235, "name": "ファンシーなバラのリース", "price": 1200, "category": "壁掛け家具"}, {"id": 236, "name": "ちょうちんセット", "price": 2000, "category": "天井"}, {"id": 237, "name": "クリスマスなラグ", "price": 1500, "category": "ラグ・じゅうたん"}, {"id": 238, "name": "おまつりのコマ", "price": 320, "category": "雑貨・小物"}, {"id": 239, "name": "かわいいクリスマスツリー", "price": 1400, "category": "家具"}, {"id": 240, "name": "クリスマスなラッピングペーパー", "price": 300, "category": "その他"}, {"id": 241, "name": "まき", "price": 960, "category": "雑貨・小物"}, {"id": 242, "name": "サカナのまきエサ", "price": 200, "category": "その他"}, {"id": 243, "name": "フィッシュ&チップス", "price": 1200, "category": "料理（お食事）"}, {"id": 244, "name": "つりざお", "price": 600, "category": "どうぐ"}, {"id": 245, "name": "ひくいにわいし", "price": 3000, "category": "家具"}, {"id": 246, "name": "ショボいオノ", "price": 200, "category": "どうぐ"}, {"id": 247, "name": "ショボいつりざお", "price": 100, "category": "どうぐ"}, {"id": 248, "name": "ショボいあみ", "price": 100, "category": "どうぐ"}, {"id": 249, "name": "ショボいスコップ", "price": 200, "category": "どうぐ"}, {"id": 250, "name": "ショボいジョウロ", "price": 200, "category": "どうぐ"}, {"id": 251, "name": "スワッグ", "price": 200, "category": "壁掛け家具"}, {"id": 252, "name": "こむぎこ", "price": 210, "category": "料理（お食事）"}, {"id": 253, "name": "スタンドフラワー", "price": 2880, "category": "家具"}, {"id": 254, "name": "そらとぶえんばん", "price": 15000, "category": "家具"}, {"id": 255, "name": "きんだんのさいだん", "price": 4500, "category": "家具"}, {"id": 256, "name": "キノコのもりのゆか", "price": 35000, "category": "ゆか"}, {"id": 257, "name": "キノコのもりのかべ", "price": 44000, "category": "壁紙"}, {"id": 258, "name": "かせきのドアプレート", "price": 500, "category": "壁掛け家具"}, {"id": 259, "name": "ふんすい", "price": 11700, "category": "家具"}, {"id": 260, "name": "ねこじゃらし", "price": 60, "category": "その他"}, {"id": 261, "name": "フライドポテト", "price": 1260, "category": "料理（お食事）"}, {"id": 262, "name": "アイシングクッキー", "price": 950, "category": "料理（デザート・飲み物）"}, {"id": 263, "name": "アイシングプレッツェル", "price": 950, "category": "料理（デザート・飲み物）"}, {"id": 264, "name": "こおりのアーチ", "price": 9000, "category": "家具"}, {"id": 265, "name": "こおりのベッド", "price": 9000, "category": "家具"}, {"id": 266, "name": "こおりのイス", "price": 6200, "category": "家具"}, {"id": 267, "name": "こおりのカウンター", "price": 7000, "category": "家具"}, {"id": 268, "name": "こおりのさく", "price": 200, "category": "その他"}, {"id": 269, "name": "こおりのフロアタイル", "price": 3200, "category": "ラグ・じゅうたん"}, {"id": 270, "name": "こおりのミニゆきだるま", "price": 5800, "category": "雑貨・小物"}, {"id": 271, "name": "こおりのパーテーション", "price": 7400, "category": "家具"}, {"id": 272, "name": "こおりのはしら", "price": 6200, "category": "家具"}, {"id": 273, "name": "こおりのアート", "price": 6600, "category": "家具"}, {"id": 274, "name": "こおりのテーブル", "price": 8200, "category": "家具"}, {"id": 275, "name": "こおりのツリー", "price": 8200, "category": "家具"}, {"id": 276, "name": "アイスキャンディー", "price": 5400, "category": "雑貨・小物"}, {"id": 277, "name": "フルーツバスケット", "price": 1000, "category": "雑貨・小物"}, {"id": 278, "name": "フルーツカップケーキ", "price": 1870, "category": "料理（デザート・飲み物）"}, {"id": 279, "name": "フルーツピザ", "price": 2500, "category": "料理（お食事）"}, {"id": 280, "name": "フルーツサラダ", "price": 1550, "category": "料理（お食事）"}, {"id": 281, "name": "フルーツのスコーン", "price": 2180, "category": "料理（デザート・飲み物）"}, {"id": 282, "name": "フルーツのリース", "price": 2000, "category": "壁掛け家具"}, {"id": 283, "name": "フルーツのパンケーキ", "price": 2180, "category": "料理（デザート・飲み物）"}, {"id": 284, "name": "フライパン", "price": 1500, "category": "雑貨・小物"}, {"id": 285, "name": "ヒカリゴケのぜんしんスーツ", "price": 750, "category": "身につけるもの"}, {"id": 286, "name": "ぎんがけいのゆか", "price": 7500, "category": "ゆか"}, {"id": 287, "name": "おへやのゆか", "price": 120, "category": "ゆか"}, {"id": 288, "name": "ゴミのやまなかべ", "price": 120, "category": "壁紙"}, {"id": 289, "name": "ガーデンベンチ", "price": 4440, "category": "家具"}, {"id": 290, "name": "よくあるにわいし", "price": 2250, "category": "家具"}, {"id": 291, "name": "えんげいワゴン", "price": 3180, "category": "家具"}, {"id": 292, "name": "はぐるまのそうち", "price": 2250, "category": "家具"}, {"id": 293, "name": "はぐるまタワー", "price": 3000, "category": "家具"}, {"id": 294, "name": "とくだいオーナメント", "price": 1000, "category": "家具"}, {"id": 295, "name": "くまのトクダイちゃん", "price": 6300, "category": "家具"}, {"id": 296, "name": "おおきなツル", "price": 2500, "category": "家具"}, {"id": 297, "name": "プレゼントのやま", "price": 660, "category": "家具"}, {"id": 298, "name": "ちっこうウォールステッカー", "price": 250, "category": "壁掛け家具"}, {"id": 299, "name": "ヒカリゴケのバルーン", "price": 1250, "category": "家具"}, {"id": 300, "name": "ヒカリゴケのいわ", "price": 750, "category": "家具"}, {"id": 301, "name": "ヒカリゴケのどうくつのかべ", "price": 2500, "category": "壁紙"}, {"id": 302, "name": "ヒカリゴケのバルーンドレス", "price": 750, "category": "身につけるもの"}, {"id": 303, "name": "ヒカリゴケのもりのゆか", "price": 1450, "category": "ゆか"}, {"id": 304, "name": "ヒカリゴケのもりのかべ", "price": 1700, "category": "壁紙"}, {"id": 305, "name": "ヒカリゴケのカチューシャ", "price": 150, "category": "身につけるもの"}, {"id": 306, "name": "ヒカリゴケのかぶりもの", "price": 400, "category": "身につけるもの"}, {"id": 307, "name": "ヒカリゴケさいばいビン", "price": 150, "category": "雑貨・小物"}, {"id": 308, "name": "ヒカリゴケのとんがりぼうし", "price": 400, "category": "身につけるもの"}, {"id": 309, "name": "ヒカリゴケのいずみ", "price": 3000, "category": "家具"}, {"id": 310, "name": "ヒカリゴケのラグ", "price": 300, "category": "ラグ・じゅうたん"}, {"id": 311, "name": "ヒカリゴケのいせきのかべ", "price": 2000, "category": "壁紙"}, {"id": 312, "name": "ヒカリゴケのせきぞう", "price": 1450, "category": "家具"}, {"id": 313, "name": "ヒカリゴケのスツール", "price": 400, "category": "家具"}, {"id": 314, "name": "ヒカリゴケのリース", "price": 250, "category": "壁掛け家具"}, {"id": 315, "name": "ヒカリゴケのさいばいだな", "price": 5400, "category": "家具"}, {"id": 316, "name": "ニンジンのニョッキ", "price": 2210, "category": "料理（お食事）"}, {"id": 317, "name": "ジャガイモのニョッキ", "price": 2210, "category": "料理（お食事）"}, {"id": 318, "name": "カボチャのニョッキ", "price": 2210, "category": "料理（お食事）"}, {"id": 319, "name": "ゴールデンアーマー", "price": 80000, "category": "身につけるもの"}, {"id": 320, "name": "きんののべぼう", "price": 30000, "category": "雑貨・小物"}, {"id": 321, "name": "ゴールデンアーマーヘルメット", "price": 50000, "category": "身につけるもの"}, {"id": 322, "name": "バラのかんむり・ゴールド", "price": 12000, "category": "身につけるもの"}, {"id": 323, "name": "きんのバラのリース", "price": 20000, "category": "壁掛け家具"}, {"id": 324, "name": "ゴールデンアーマーシューズ", "price": 40000, "category": "身につけるもの"}, {"id": 325, "name": "きんかいのトロッコ", "price": 30950, "category": "家具"}, {"id": 326, "name": "きんぱくのふすま", "price": 20750, "category": "壁紙"}, {"id": 327, "name": "おうごんのさいだん", "price": 52250, "category": "家具"}, {"id": 328, "name": "きんのアロワナ", "price": 30000, "category": "雑貨・小物"}, {"id": 329, "name": "きんのオノ", "price": 10655, "category": "どうぐ"}, {"id": 330, "name": "きんのゆぶね", "price": 21725, "category": "家具"}, {"id": 331, "name": "おうごんのしょくだい", "price": 20000, "category": "雑貨・小物"}, {"id": 332, "name": "おうごんのひつぎ", "price": 80000, "category": "家具"}, {"id": 333, "name": "きんのおおきなえざら", "price": 13500, "category": "雑貨・小物"}, {"id": 334, "name": "きんのダルマ", "price": 11815, "category": "雑貨・小物"}, {"id": 335, "name": "おうごんのしょっき", "price": 10000, "category": "雑貨・小物"}, {"id": 336, "name": "きんのスカラベ", "price": 30000, "category": "雑貨・小物"}, {"id": 337, "name": "おうごんのゆか", "price": 40000, "category": "ゆか"}, {"id": 338, "name": "きんのうさぎのガーデンオブジェ", "price": 10425, "category": "雑貨・小物"}, {"id": 339, "name": "きんのはぐるまのそうち", "price": 21125, "category": "家具"}, {"id": 340, "name": "きんのはぐるまタワー", "price": 21500, "category": "家具"}, {"id": 341, "name": "おうごんのはぐるま", "price": 11125, "category": "壁掛け家具"}, {"id": 342, "name": "きんのFIXはしごキット", "price": 10720, "category": "どうぐ"}, {"id": 343, "name": "きんのメーターつきバルブ", "price": 21150, "category": "家具"}, {"id": 344, "name": "きんのあみ", "price": 10400, "category": "どうぐ"}, {"id": 345, "name": "きんのブタのちょきんばこ", "price": 10185, "category": "雑貨・小物"}, {"id": 346, "name": "きんのはしら", "price": null, "category": "その他"}, {"id": 347, "name": "ゴールドプレートアーマー", "price": 23750, "category": "家具"}, {"id": 348, "name": "きんのつりざお", "price": 10400, "category": "どうぐ"}, {"id": 349, "name": "きんのよろいかぶと", "price": 57500, "category": "家具"}, {"id": 350, "name": "おうごんのベンチ", "price": 50000, "category": "家具"}, {"id": 351, "name": "きんのスコップ", "price": 10675, "category": "どうぐ"}, {"id": 352, "name": "きんのパチンコ", "price": 10300, "category": "どうぐ"}, {"id": 353, "name": "おうごんのトイレ", "price": 60000, "category": "家具"}, {"id": 354, "name": "きんのみずがめ", "price": 11250, "category": "雑貨・小物"}, {"id": 355, "name": "おうごんのつぼ", "price": 42500, "category": "家具"}, {"id": 356, "name": "おうごんのかべ", "price": 40000, "category": "壁紙"}, {"id": 357, "name": "おうごんのステッキ", "price": 20750, "category": "どうぐ"}, {"id": 358, "name": "きんのジョウロ", "price": 10675, "category": "どうぐ"}, {"id": 359, "name": "きんのうでどけい", "price": 27000, "category": "雑貨・小物"}, {"id": 360, "name": "どら", "price": 5100, "category": "家具"}, {"id": 361, "name": "こしみの", "price": 140, "category": "身につけるもの"}, {"id": 362, "name": "ハリボテのくさ", "price": 480, "category": "家具"}, {"id": 363, "name": "グラタン", "price": 2000, "category": "料理（お食事）"}, {"id": 364, "name": "あおたけのさく", "price": 96, "category": "その他"}, {"id": 365, "name": "みどりのたけのしきもの", "price": 480, "category": "ラグ・じゅうたん"}, {"id": 366, "name": "みどりのこしみの", "price": 140, "category": "身につけるもの"}, {"id": 367, "name": "みどりのおちば", "price": 600, "category": "家具"}, {"id": 368, "name": "スズキのこうそうやき", "price": 540, "category": "料理（お食事）"}, {"id": 369, "name": "つりさがるヒカリゴケ", "price": 550, "category": "天井"}, {"id": 370, "name": "ハンギングテラリウム", "price": 3240, "category": "壁掛け家具"}, {"id": 371, "name": "ほしくさのベッド", "price": 400, "category": "家具"}, {"id": 372, "name": "いろり", "price": 5470, "category": "家具"}, {"id": 373, "name": "いけがき", "price": 55, "category": "その他"}, {"id": 374, "name": "ハリボテのいけがき", "price": 600, "category": "家具"}, {"id": 375, "name": "クリスマスキャンドル", "price": 600, "category": "雑貨・小物"}, {"id": 376, "name": "ハチミツなゆか", "price": 3000, "category": "ゆか"}, {"id": 377, "name": "ビーハイブなかべ", "price": 3600, "category": "壁紙"}, {"id": 378, "name": "ヒヤシンスのかんむり", "price": 640, "category": "身につけるもの"}, {"id": 379, "name": "ヒヤシンスのランプ", "price": 3000, "category": "雑貨・小物"}, {"id": 380, "name": "ヒヤシンスのステッキ", "price": 1660, "category": "どうぐ"}, {"id": 381, "name": "ヒヤシンスのリース", "price": 720, "category": "壁掛け家具"}, {"id": 382, "name": "アイスなゆか", "price": 8200, "category": "ゆか"}, {"id": 383, "name": "アイスなかべがみ", "price": 8200, "category": "壁紙"}, {"id": 384, "name": "こおりのステッキ", "price": 6500, "category": "どうぐ"}, {"id": 385, "name": "りゅうひょうのゆか", "price": 4000, "category": "ゆか"}, {"id": 386, "name": "ひょうざんのかべ", "price": 4000, "category": "壁紙"}, {"id": 387, "name": "プレゼントのイルミネーション", "price": 2950, "category": "家具"}, {"id": 388, "name": "トナカイのイルミネーション", "price": 4350, "category": "家具"}, {"id": 389, "name": "ゆきのイルミネーション", "price": 3150, "category": "家具"}, {"id": 390, "name": "ツリーのイルミネーション", "price": 6700, "category": "家具"}, {"id": 391, "name": "オリエンタルなさく", "price": 120, "category": "その他"}, {"id": 392, "name": "ちゅうかなべ", "price": 2250, "category": "雑貨・小物"}, {"id": 393, "name": "フルーツウォーターサーバー", "price": 3000, "category": "雑貨・小物"}, {"id": 394, "name": "アイアンアーマー", "price": 6000, "category": "身につけるもの"}, {"id": 395, "name": "アイアンクロゼット", "price": 9000, "category": "家具"}, {"id": 396, "name": "アイアンなドアプレート", "price": 1500, "category": "壁掛け家具"}, {"id": 397, "name": "てつのさく", "price": 450, "category": "その他"}, {"id": 398, "name": "てっこつ", "price": 15000, "category": "家具"}, {"id": 399, "name": "アイアンガーデンベンチ", "price": 6000, "category": "家具"}, {"id": 400, "name": "アイアンガーデンチェア", "price": 2250, "category": "家具"}, {"id": 401, "name": "アイアンガーデンテーブル", "price": 3750, "category": "家具"}, {"id": 402, "name": "アイアンハンガースタンド", "price": 2250, "category": "家具"}, {"id": 403, "name": "てつのFIXはしごキット", "price": 5190, "category": "どうぐ"}, {"id": 404, "name": "アイアンシェルフ", "price": 10500, "category": "家具"}, {"id": 405, "name": "アイアンウォールランプ", "price": 3400, "category": "壁掛け家具"}, {"id": 406, "name": "アイアンウォールラック", "price": 2450, "category": "壁掛け家具"}, {"id": 407, "name": "てつのステッキ", "price": 3750, "category": "どうぐ"}, {"id": 408, "name": "アイアンワークテーブル", "price": 7500, "category": "家具"}, {"id": 409, "name": "ようふうのさく", "price": 315, "category": "その他"}, {"id": 410, "name": "アイアンウッドDIYテーブル", "price": 8520, "category": "家具"}, {"id": 411, "name": "アイアンウッドベッド", "price": 9900, "category": "家具"}, {"id": 412, "name": "アイアンウッドワゴン", "price": 3720, "category": "家具"}, {"id": 413, "name": "アイアンウッドチェア", "price": 1860, "category": "家具"}, {"id": 414, "name": "アイアンウッドクロック", "price": 1740, "category": "壁掛け家具"}, {"id": 415, "name": "アイアンウッドカップボード", "price": 9780, "category": "家具"}, {"id": 416, "name": "アイアンウッドチェスト", "price": 3840, "category": "家具"}, {"id": 417, "name": "アイアンウッドキッチン", "price": 7560, "category": "家具"}, {"id": 418, "name": "アイアンウッドローテーブル", "price": 3720, "category": "家具"}, {"id": 419, "name": "アイアンウッドテーブル", "price": 5940, "category": "家具"}, {"id": 420, "name": "おり", "price": 3750, "category": "家具"}, {"id": 421, "name": "たけのこのみずに", "price": 1500, "category": "料理（お食事）"}, {"id": 422, "name": "なめたけ", "price": 1200, "category": "料理（お食事）"}, {"id": 423, "name": "リンゴのテレビ", "price": 3500, "category": "家具"}, {"id": 424, "name": "ジャングルのゆか", "price": 2200, "category": "ゆか"}, {"id": 425, "name": "ジャングルのかべがみ", "price": 1380, "category": "壁紙"}, {"id": 426, "name": "まるごとカブあんかけ", "price": 450, "category": "料理（お食事）"}, {"id": 427, "name": "カレイのにつけ", "price": 360, "category": "料理（お食事）"}, {"id": 428, "name": "ごえもんぶろ", "price": 6270, "category": "家具"}, {"id": 429, "name": "ケトルベル", "price": 3750, "category": "雑貨・小物"}, {"id": 430, "name": "キーハンガー", "price": 1110, "category": "壁掛け家具"}, {"id": 431, "name": "グレー", "price": 3750, "category": "身につけるもの"}, {"id": 432, "name": "くさあみリュック", "price": 400, "category": "身につけるもの"}, {"id": 433, "name": "はしご", "price": 1440, "category": "どうぐ"}, {"id": 434, "name": "ひっこしダンボールL", "price": 300, "category": "家具"}, {"id": 435, "name": "おおきなラティス", "price": 120, "category": "その他"}, {"id": 436, "name": "ラティス", "price": 96, "category": "その他"}, {"id": 437, "name": "はっぱ", "price": 100, "category": "身につけるもの"}, {"id": 438, "name": "おちばのたきび", "price": 1330, "category": "家具"}, {"id": 439, "name": "グリーン", "price": 200, "category": "身につけるもの"}, {"id": 440, "name": "おちばスツール", "price": 1560, "category": "家具"}, {"id": 441, "name": "はっぱのかさ", "price": 300, "category": "身につけるもの"}, {"id": 442, "name": "はっぱのたまごのふく", "price": 1200, "category": "身につけるもの"}, {"id": 443, "name": "はっぱのたまごのから", "price": 800, "category": "身につけるもの"}, {"id": 444, "name": "はっぱのたまごのくつ", "price": 800, "category": "身につけるもの"}, {"id": 445, "name": "ライトなバンブーバスマット", "price": 1200, "category": "ラグ・じゅうたん"}, {"id": 446, "name": "ライトなバンブーラグ", "price": 2400, "category": "ラグ・じゅうたん"}, {"id": 447, "name": "ユリのかんむり", "price": 480, "category": "身につけるもの"}, {"id": 448, "name": "ユリのレコードプレーヤー", "price": 3010, "category": "家具"}, {"id": 449, "name": "ユリのステッキ", "price": 1580, "category": "どうぐ"}, {"id": 450, "name": "ユリのリース", "price": 720, "category": "壁掛け家具"}, {"id": 451, "name": "まるたのベッド", "price": 3600, "category": "家具"}, {"id": 452, "name": "まるたのベンチ", "price": 600, "category": "家具"}, {"id": 453, "name": "まるたのソファ", "price": 960, "category": "家具"}, {"id": 454, "name": "まるたのかざりだな", "price": 1560, "category": "家具"}, {"id": 455, "name": "まるたのダイニングテーブル", "price": 1800, "category": "家具"}, {"id": 456, "name": "まるたのロングソファ", "price": 1920, "category": "家具"}, {"id": 457, "name": "よこむきのまるたのさく", "price": 72, "category": "その他"}, {"id": 458, "name": "まるたのガーデンベッド", "price": 1440, "category": "家具"}, {"id": 459, "name": "せおいばしご", "price": 960, "category": "身につけるもの"}, {"id": 460, "name": "まるたのラウンドテーブル", "price": 1800, "category": "家具"}, {"id": 461, "name": "まるたのくい", "price": 360, "category": "家具"}, {"id": 462, "name": "まるたのスツール", "price": 480, "category": "家具"}, {"id": 463, "name": "まるたのかべかけどけい", "price": 990, "category": "壁掛け家具"}, {"id": 464, "name": "まるたかべのさく", "price": 120, "category": "その他"}, {"id": 465, "name": "コスモスのかんむり・ラブリー", "price": 1120, "category": "身につけるもの"}, {"id": 466, "name": "レンガのしきりカウンターL", "price": null, "category": "その他"}, {"id": 467, "name": "コンクリートしきりカウンターL", "price": null, "category": "その他"}, {"id": 468, "name": "きんのしきりカウンターL", "price": null, "category": "その他"}, {"id": 469, "name": "だいりせきのしきりカウンターL", "price": null, "category": "その他"}, {"id": 470, "name": "シンプルなしきりカウンターL", "price": null, "category": "その他"}, {"id": 471, "name": "スチールのしきりカウンターL", "price": null, "category": "その他"}, {"id": 472, "name": "もくせいのしきりカウンターL", "price": null, "category": "その他"}, {"id": 473, "name": "きんのまねきねこ", "price": 21675, "category": "雑貨・小物"}, {"id": 474, "name": "ちゃくりくせん", "price": 16250, "category": "家具"}, {"id": 475, "name": "げつめんいどうしゃ", "price": 12580, "category": "家具"}, {"id": 476, "name": "げつめんのゆか", "price": 7500, "category": "ゆか"}, {"id": 477, "name": "マガジンラック", "price": 690, "category": "雑貨・小物"}, {"id": 478, "name": "マンガライブラリーなかべ", "price": 1050, "category": "壁紙"}, {"id": 479, "name": "マンホール", "price": 2250, "category": "家具"}, {"id": 480, "name": "もみじのポシェット", "price": 2400, "category": "身につけるもの"}, {"id": 481, "name": "いしのみずうけ～もみじ～", "price": 2700, "category": "家具"}, {"id": 482, "name": "もみじのラグ", "price": 2400, "category": "ラグ・じゅうたん"}, {"id": 483, "name": "もみじのかさ", "price": 2800, "category": "身につけるもの"}, {"id": 484, "name": "だいりせきのはしら", "price": null, "category": "その他"}, {"id": 485, "name": "マトリョーシカ", "price": 600, "category": "雑貨・小物"}, {"id": 486, "name": "おくすり", "price": 100, "category": "その他"}, {"id": 487, "name": "ひっこしダンボールM", "price": 240, "category": "家具"}, {"id": 488, "name": "もくせいウォールパーテーションM", "price": 2400, "category": "家具"}, {"id": 489, "name": "マーメイドなベッド", "price": 22400, "category": "家具"}, {"id": 490, "name": "マーメイドなチェア", "price": 11140, "category": "家具"}, {"id": 491, "name": "マーメイドなクロゼット", "price": 22500, "category": "家具"}, {"id": 492, "name": "マーメイドなチェスト", "price": 22400, "category": "家具"}, {"id": 493, "name": "マーメイドなさく", "price": 1310, "category": "その他"}, {"id": 494, "name": "マーメイドなゆか", "price": 20975, "category": "ゆか"}, {"id": 495, "name": "マーメイドなランプ", "price": 13850, "category": "家具"}, {"id": 496, "name": "マーメイドなラグ", "price": 10360, "category": "ラグ・じゅうたん"}, {"id": 497, "name": "マーメイドなスクリーン", "price": 23300, "category": "家具"}, {"id": 498, "name": "マーメイドなシェルフ", "price": 12900, "category": "家具"}, {"id": 499, "name": "マーメイドなソファ", "price": 11200, "category": "家具"}, {"id": 500, "name": "マーメイドなテーブル", "price": 10480, "category": "家具"}, {"id": 501, "name": "マーメイドなドレッサー", "price": 12650, "category": "家具"}, {"id": 502, "name": "マーメイドなかべがみ", "price": 23520, "category": "壁紙"}, {"id": 503, "name": "マーメイドなウォールクロック", "price": 12290, "category": "壁掛け家具"}, {"id": 504, "name": "ミネストローネ", "price": 2100, "category": "料理（お食事）"}, {"id": 505, "name": "ちいさなDIYさぎょうだい", "price": 2580, "category": "家具"}, {"id": 506, "name": "きんのミニダルマ", "price": 10605, "category": "雑貨・小物"}, {"id": 507, "name": "フルーツのベーグルサンド", "price": 2180, "category": "料理（お食事）"}, {"id": 508, "name": "フルーツクレープ", "price": 2180, "category": "料理（デザート・飲み物）"}, {"id": 509, "name": "フルーツパイ", "price": 2500, "category": "料理（デザート・飲み物）"}, {"id": 510, "name": "フルーツサンド", "price": 2180, "category": "料理（お食事）"}, {"id": 511, "name": "フルーツタルト", "price": 1870, "category": "料理（デザート・飲み物）"}, {"id": 512, "name": "ねんどのおもちゃ", "price": 400, "category": "雑貨・小物"}, {"id": 513, "name": "ミックスウッドのかべ", "price": 1800, "category": "壁紙"}, {"id": 514, "name": "マネーなゆか", "price": 25000, "category": "ゆか"}, {"id": 515, "name": "つき", "price": 12500, "category": "家具"}, {"id": 516, "name": "こけむしたにわいし", "price": 2550, "category": "家具"}, {"id": 517, "name": "ハリボテのやま", "price": 1080, "category": "家具"}, {"id": 518, "name": "キクのかんむり", "price": 480, "category": "身につけるもの"}, {"id": 519, "name": "キクのクッション", "price": 440, "category": "家具"}, {"id": 520, "name": "キクのリース", "price": 720, "category": "壁掛け家具"}, {"id": 521, "name": "キクのステッキ", "price": 1580, "category": "どうぐ"}, {"id": 522, "name": "キノコのランプ", "price": 1600, "category": "家具"}, {"id": 523, "name": "キノコのげんぼく", "price": 1680, "category": "家具"}, {"id": 524, "name": "キノコのスツール", "price": 800, "category": "家具"}, {"id": 525, "name": "キノコのパラソル", "price": 1200, "category": "家具"}, {"id": 526, "name": "キノコのスクリーン", "price": 1800, "category": "家具"}, {"id": 527, "name": "キノコのテーブル", "price": 1520, "category": "家具"}, {"id": 528, "name": "キノコのかさ", "price": 1200, "category": "身につけるもの"}, {"id": 529, "name": "キノコのかべがみ", "price": 21400, "category": "壁紙"}, {"id": 530, "name": "キノコのクレープ", "price": 1840, "category": "料理（お食事）"}, {"id": 531, "name": "キノコカレー", "price": 2660, "category": "料理（お食事）"}, {"id": 532, "name": "キノコのピザ", "price": 2860, "category": "料理（お食事）"}, {"id": 533, "name": "キノコのポタージュ", "price": 1220, "category": "料理（お食事）"}, {"id": 534, "name": "キノコのサラダ", "price": 1400, "category": "料理（お食事）"}, {"id": 535, "name": "キノコのステッキ", "price": 3300, "category": "どうぐ"}, {"id": 536, "name": "キノコのリース", "price": 1500, "category": "壁掛け家具"}, {"id": 537, "name": "ふめんだい", "price": 960, "category": "家具"}, {"id": 538, "name": "ナチュラルなガーデンチェア", "price": 2220, "category": "家具"}, {"id": 539, "name": "ナチュラルなガーデンテーブル", "price": 3330, "category": "家具"}, {"id": 540, "name": "ナチュラルなキクのリース", "price": 4800, "category": "壁掛け家具"}, {"id": 541, "name": "ナチュラルなスクエアテーブル", "price": 1980, "category": "家具"}, {"id": 542, "name": "あみ", "price": 600, "category": "どうぐ"}, {"id": 543, "name": "ほどよいえだ", "price": 30, "category": "その他"}, {"id": 544, "name": "スターライト", "price": 2500, "category": "雑貨・小物"}, {"id": 545, "name": "オカリナ", "price": 1000, "category": "その他"}, {"id": 546, "name": "ドラムかんぶろ", "price": 655, "category": "家具"}, {"id": 547, "name": "せんたくおけ", "price": 360, "category": "雑貨・小物"}, {"id": 548, "name": "ヒラメのムニエル", "price": 1470, "category": "料理（お食事）"}, {"id": 549, "name": "もくせいオープンシェルフ", "price": 1200, "category": "家具"}, {"id": 550, "name": "オレンジのふく", "price": 1600, "category": "身につけるもの"}, {"id": 551, "name": "オレンジのサイドテーブル", "price": 2480, "category": "家具"}, {"id": 552, "name": "オレンジのぼうし", "price": 1000, "category": "身につけるもの"}, {"id": 553, "name": "オレンジゼリー", "price": 300, "category": "料理（デザート・飲み物）"}, {"id": 554, "name": "マーマレード", "price": 450, "category": "料理（お食事）"}, {"id": 555, "name": "オレンジパイ", "price": 1880, "category": "料理（デザート・飲み物）"}, {"id": 556, "name": "オレンジパウンドケーキ", "price": 1250, "category": "料理（デザート・飲み物）"}, {"id": 557, "name": "オレンジのラグ", "price": 1200, "category": "ラグ・じゅうたん"}, {"id": 558, "name": "オレンジスムージー", "price": 300, "category": "料理（デザート・飲み物）"}, {"id": 559, "name": "オレンジタルト", "price": 780, "category": "料理（デザート・飲み物）"}, {"id": 560, "name": "オレンジのかさ", "price": 1400, "category": "身につけるもの"}, {"id": 561, "name": "オレンジのかべがみ", "price": 4000, "category": "壁紙"}, {"id": 562, "name": "オレンジのかべかけどけい", "price": 2240, "category": "壁掛け家具"}, {"id": 563, "name": "オーガニックパン", "price": 950, "category": "料理（お食事）"}, {"id": 564, "name": "オーナメントのかんむり", "price": 900, "category": "身につけるもの"}, {"id": 565, "name": "オーナメントのガーランド", "price": 4350, "category": "家具"}, {"id": 566, "name": "オーナメントのモビール", "price": 340, "category": "壁掛け家具"}, {"id": 567, "name": "オーナメントのテーブルランプ", "price": 1700, "category": "雑貨・小物"}, {"id": 568, "name": "オーナメントのツリー", "price": 2850, "category": "家具"}, {"id": 569, "name": "オーナメントのリース", "price": 800, "category": "壁掛け家具"}, {"id": 570, "name": "ろてんぶろ", "price": 4350, "category": "家具"}, {"id": 571, "name": "おはなみセット", "price": 4000, "category": "家具"}, {"id": 572, "name": "パームツリーランプ", "price": 3280, "category": "家具"}, {"id": 573, "name": "パンフルート", "price": 2800, "category": "その他"}, {"id": 574, "name": "パンケーキ", "price": 1260, "category": "料理（デザート・飲み物）"}, {"id": 575, "name": "パンジーのかんむり", "price": 480, "category": "身につけるもの"}, {"id": 576, "name": "パンジーのテーブル", "price": 760, "category": "家具"}, {"id": 577, "name": "パンジーのステッキ", "price": 1580, "category": "どうぐ"}, {"id": 578, "name": "パンジーのリース", "price": 720, "category": "壁掛け家具"}, {"id": 579, "name": "こうえんのさく", "price": 375, "category": "その他"}, {"id": 580, "name": "しきりかべ", "price": null, "category": "その他"}, {"id": 581, "name": "にくきゅうのドアプレート", "price": 360, "category": "壁掛け家具"}, {"id": 582, "name": "モモのチェア", "price": 2600, "category": "家具"}, {"id": 583, "name": "モモのふく", "price": 1600, "category": "身につけるもの"}, {"id": 584, "name": "モモのぼうし", "price": 1000, "category": "身につけるもの"}, {"id": 585, "name": "ピーチジャム", "price": 450, "category": "料理（お食事）"}, {"id": 586, "name": "ピーチゼリー", "price": 300, "category": "料理（デザート・飲み物）"}, {"id": 587, "name": "ピーチパイ", "price": 1880, "category": "料理（デザート・飲み物）"}, {"id": 588, "name": "モモのラグ", "price": 1200, "category": "ラグ・じゅうたん"}, {"id": 589, "name": "モモスムージー", "price": 300, "category": "料理（デザート・飲み物）"}, {"id": 590, "name": "モモのビックリばこ", "price": 2480, "category": "雑貨・小物"}, {"id": 591, "name": "ピーチタルト", "price": 780, "category": "料理（デザート・飲み物）"}, {"id": 592, "name": "モモのかさ", "price": 1400, "category": "身につけるもの"}, {"id": 593, "name": "モモのかべがみ", "price": 4000, "category": "壁紙"}, {"id": 594, "name": "ナシのベッド", "price": 2720, "category": "家具"}, {"id": 595, "name": "ナシのふく", "price": 1600, "category": "身につけるもの"}, {"id": 596, "name": "ナシのぼうし", "price": 1000, "category": "身につけるもの"}, {"id": 597, "name": "ナシのジャム", "price": 450, "category": "料理（お食事）"}, {"id": 598, "name": "ナシのゼリー", "price": 300, "category": "料理（デザート・飲み物）"}, {"id": 599, "name": "ナシのパイ", "price": 1880, "category": "料理（デザート・飲み物）"}, {"id": 600, "name": "ナシのラグ", "price": 1200, "category": "ラグ・じゅうたん"}, {"id": 601, "name": "ナシスムージー", "price": 300, "category": "料理（デザート・飲み物）"}, {"id": 602, "name": "ナシのタルト", "price": 780, "category": "料理（デザート・飲み物）"}, {"id": 603, "name": "ナシのかさ", "price": 1400, "category": "身につけるもの"}, {"id": 604, "name": "ナシのかべがみ", "price": 4000, "category": "壁紙"}, {"id": 605, "name": "ナシのクロゼット", "price": 2600, "category": "家具"}, {"id": 606, "name": "タイのアクアパッツァ", "price": 4140, "category": "料理（お食事）"}, {"id": 607, "name": "やさいのピクルス", "price": 2100, "category": "料理（お食事）"}, {"id": 608, "name": "ダンボールのやま", "price": 180, "category": "家具"}, {"id": 609, "name": "おさつのやま", "price": 148500, "category": "雑貨・小物"}, {"id": 610, "name": "おちば", "price": 1300, "category": "家具"}, {"id": 611, "name": "ざぶとんのやま", "price": 750, "category": "家具"}, {"id": 612, "name": "マツのぼんさい", "price": 4200, "category": "雑貨・小物"}, {"id": 613, "name": "おとしあなのタネ", "price": 140, "category": "その他"}, {"id": 614, "name": "マルゲリータ", "price": 2000, "category": "料理（お食事）"}, {"id": 615, "name": "プレーンカップケーキ", "price": 630, "category": "料理（デザート・飲み物）"}, {"id": 616, "name": "スコーン", "price": 950, "category": "料理（デザート・飲み物）"}, {"id": 617, "name": "そぼくなせんめんだい", "price": 2270, "category": "家具"}, {"id": 618, "name": "そぼくなもくせいかんばん", "price": 720, "category": "家具"}, {"id": 619, "name": "プレートアーマー", "price": 7500, "category": "家具"}, {"id": 620, "name": "ポキ", "price": 1260, "category": "料理（お食事）"}, {"id": 621, "name": "いしのみずうけ", "price": 1500, "category": "家具"}, {"id": 622, "name": "かめ", "price": 1000, "category": "雑貨・小物"}, {"id": 623, "name": "ジャガイモのカレー", "price": 2520, "category": "料理（お食事）"}, {"id": 624, "name": "ジャガイモのガレット", "price": 2210, "category": "料理（お食事）"}, {"id": 625, "name": "ジャガイモのポタージュ", "price": 1370, "category": "料理（お食事）"}, {"id": 626, "name": "かべかけのはっぱ", "price": 1100, "category": "壁掛け家具"}, {"id": 627, "name": "パウンドケーキ", "price": 950, "category": "料理（デザート・飲み物）"}, {"id": 628, "name": "キュートなコスモスのリース", "price": 1200, "category": "壁掛け家具"}, {"id": 629, "name": "キュートなチューリップのリース", "price": 2400, "category": "壁掛け家具"}, {"id": 630, "name": "プレッツェル", "price": 630, "category": "料理（デザート・飲み物）"}, {"id": 631, "name": "こうさくだい", "price": 1200, "category": "家具"}, {"id": 632, "name": "ちぎりパン", "price": 630, "category": "料理（お食事）"}, {"id": 633, "name": "カボチャのベーグルサンド", "price": 2210, "category": "料理（お食事）"}, {"id": 634, "name": "カボチャのカップケーキ", "price": 1680, "category": "料理（デザート・飲み物）"}, {"id": 635, "name": "パンプキンカレー", "price": 2520, "category": "料理（お食事）"}, {"id": 636, "name": "パンプキンパイ", "price": 2630, "category": "料理（お食事）"}, {"id": 637, "name": "カボチャのパウンドケーキ", "price": 2000, "category": "料理（デザート・飲み物）"}, {"id": 638, "name": "カボチャのスコーン", "price": 2000, "category": "料理（デザート・飲み物）"}, {"id": 639, "name": "カボチャのスープ", "price": 1260, "category": "料理（お食事）"}, {"id": 640, "name": "ヒヤシンスのかんむり・パープル", "price": 2880, "category": "身につけるもの"}, {"id": 641, "name": "むらさきのヒヤシンスのリース", "price": 4800, "category": "壁掛け家具"}, {"id": 642, "name": "パンジーのかんむり・パープル", "price": 2880, "category": "身につけるもの"}, {"id": 643, "name": "アネモネのかんむり・パープル", "price": 2880, "category": "身につけるもの"}, {"id": 644, "name": "たぬきのおきもの", "price": 1200, "category": "家具"}, {"id": 645, "name": "にじいろのはね", "price": 1600, "category": "その他"}, {"id": 646, "name": "リサイクルながぐつ", "price": 40, "category": "身につけるもの"}, {"id": 647, "name": "あきかんカリンバ", "price": 890, "category": "雑貨・小物"}, {"id": 648, "name": "あかいおちば", "price": 1280, "category": "家具"}, {"id": 649, "name": "わなげ", "price": 480, "category": "雑貨・小物"}, {"id": 650, "name": "ヒーローロボ", "price": 250000, "category": "家具"}, {"id": 651, "name": "ロケット", "price": 20000, "category": "家具"}, {"id": 652, "name": "ロッキングチェア", "price": 960, "category": "家具"}, {"id": 653, "name": "もくば", "price": 600, "category": "家具"}, {"id": 654, "name": "ペグとロープ", "price": 300, "category": "その他"}, {"id": 655, "name": "ロープネットのゆか", "price": 1000, "category": "ゆか"}, {"id": 656, "name": "ロープネットのかべ", "price": 2200, "category": "壁紙"}, {"id": 657, "name": "バラのベッド", "price": 1400, "category": "家具"}, {"id": 658, "name": "バラのかんむり", "price": 480, "category": "身につけるもの"}, {"id": 659, "name": "バラのステッキ", "price": 1580, "category": "どうぐ"}, {"id": 660, "name": "バラのリース", "price": 720, "category": "壁掛け家具"}, {"id": 661, "name": "ヒカリゴケのラウンドマット", "price": 200, "category": "ラグ・じゅうたん"}, {"id": 662, "name": "ツルのラウンドラグ", "price": 400, "category": "ラグ・じゅうたん"}, {"id": 663, "name": "いせきのアーチ", "price": 3500, "category": "家具"}, {"id": 664, "name": "いせきのおれたはしら", "price": 1250, "category": "家具"}, {"id": 665, "name": "いせきのかざりばしら", "price": 2000, "category": "家具"}, {"id": 666, "name": "いせきのこしかけ", "price": 750, "category": "家具"}, {"id": 667, "name": "ランダムストーンのかべ", "price": 1750, "category": "壁紙"}, {"id": 668, "name": "さくらのウッドフローリング", "price": 3200, "category": "ゆか"}, {"id": 669, "name": "さくらのウッドウォール", "price": 3200, "category": "壁紙"}, {"id": 670, "name": "サラダ", "price": 2100, "category": "料理（お食事）"}, {"id": 671, "name": "まるごとトマトのサラダ", "price": 1260, "category": "料理（お食事）"}, {"id": 672, "name": "キャロットラペ", "price": 1260, "category": "料理（お食事）"}, {"id": 673, "name": "サーモンのベーグルサンド", "price": 1350, "category": "料理（お食事）"}, {"id": 674, "name": "サーモンサンド", "price": 1350, "category": "料理（お食事）"}, {"id": 675, "name": "すなはまのゆか", "price": 4120, "category": "ゆか"}, {"id": 676, "name": "オイルサーディン", "price": 300, "category": "料理（お食事）"}, {"id": 677, "name": "じんこうえいせい", "price": 16250, "category": "家具"}, {"id": 678, "name": "サウナストーブ", "price": 3510, "category": "家具"}, {"id": 679, "name": "ヒラメのソテー", "price": 1320, "category": "料理（お食事）"}, {"id": 680, "name": "そうざいパン", "price": 2520, "category": "料理（お食事）"}, {"id": 681, "name": "かかし", "price": 130, "category": "家具"}, {"id": 682, "name": "ちらばったかみ", "price": 400, "category": "家具"}, {"id": 683, "name": "うちゅうせんのゆか", "price": 7500, "category": "ゆか"}, {"id": 684, "name": "うちゅうせんのかべ", "price": 7500, "category": "壁紙"}, {"id": 685, "name": "スズキのパイ", "price": 1240, "category": "料理（お食事）"}, {"id": 686, "name": "シーフードのアヒージョ", "price": 5640, "category": "料理（お食事）"}, {"id": 687, "name": "シーフードピザ", "price": 4600, "category": "料理（お食事）"}, {"id": 688, "name": "シーフードサラダ", "price": 2280, "category": "料理（お食事）"}, {"id": 689, "name": "わかめスープ", "price": 1440, "category": "料理（お食事）"}, {"id": 690, "name": "せんまいづけのたる", "price": 600, "category": "家具"}, {"id": 691, "name": "シャムロックステッキ", "price": 1560, "category": "どうぐ"}, {"id": 692, "name": "かいがらのアーチ", "price": 12360, "category": "家具"}, {"id": 693, "name": "かいがらのベッド", "price": 10200, "category": "家具"}, {"id": 694, "name": "かいがらのふんすい", "price": 9450, "category": "家具"}, {"id": 695, "name": "かいがらのランプ", "price": 4200, "category": "雑貨・小物"}, {"id": 696, "name": "かいがらのオルゴール", "price": 6900, "category": "雑貨・小物"}, {"id": 697, "name": "かいがらのスクリーン", "price": 8000, "category": "家具"}, {"id": 698, "name": "かいがらのラグ", "price": 5400, "category": "ラグ・じゅうたん"}, {"id": 699, "name": "かいがらのスピーカー", "price": 5700, "category": "雑貨・小物"}, {"id": 700, "name": "かいがらのスツール", "price": 600, "category": "家具"}, {"id": 701, "name": "かいがらのテーブル", "price": 2280, "category": "家具"}, {"id": 702, "name": "かいがらのステッキ", "price": 5100, "category": "どうぐ"}, {"id": 703, "name": "かいがらのリース", "price": 4720, "category": "壁掛け家具"}, {"id": 704, "name": "かいがらポシェット", "price": 10800, "category": "身につけるもの"}, {"id": 705, "name": "スコップ", "price": 600, "category": "どうぐ"}, {"id": 706, "name": "みちしるべ", "price": 600, "category": "家具"}, {"id": 707, "name": "サイロ", "price": 13920, "category": "家具"}, {"id": 708, "name": "そぼくなDIYさぎょうだい", "price": 1350, "category": "家具"}, {"id": 709, "name": "キクのかんむり・シンプル", "price": 2880, "category": "身につけるもの"}, {"id": 710, "name": "シンプルなはしら", "price": null, "category": "その他"}, {"id": 711, "name": "シンプルないど", "price": 2850, "category": "家具"}, {"id": 712, "name": "そぼくなもくせいのさく", "price": 72, "category": "その他"}, {"id": 713, "name": "かべかけスケートボード", "price": 1425, "category": "壁掛け家具"}, {"id": 714, "name": "ゲレンデのゆか", "price": 3200, "category": "ゆか"}, {"id": 715, "name": "ゲレンデなかべがみ", "price": 3200, "category": "壁紙"}, {"id": 716, "name": "そらとぶたまごのふく", "price": 1200, "category": "身につけるもの"}, {"id": 717, "name": "そらとぶたまごのから", "price": 800, "category": "身につけるもの"}, {"id": 718, "name": "そらとぶたまごのくつ", "price": 800, "category": "身につけるもの"}, {"id": 719, "name": "そり", "price": 960, "category": "家具"}, {"id": 720, "name": "パチンコ", "price": 225, "category": "どうぐ"}, {"id": 721, "name": "ひっこしダンボールS", "price": 120, "category": "家具"}, {"id": 722, "name": "もくせいウォールパーテーションS", "price": 1200, "category": "家具"}, {"id": 723, "name": "かしパン", "price": 1260, "category": "料理（お食事）"}, {"id": 724, "name": "ポップなパンジーのリース", "price": 1200, "category": "壁掛け家具"}, {"id": 725, "name": "スノーフレークポシェット", "price": 2400, "category": "身につけるもの"}, {"id": 726, "name": "スノーフレークのかべがみ", "price": 4800, "category": "壁紙"}, {"id": 727, "name": "ゆきのけっしょうのリース", "price": 1600, "category": "壁掛け家具"}, {"id": 728, "name": "ゆきだるまのぼうし", "price": 7000, "category": "身につけるもの"}, {"id": 729, "name": "スペースシャトル", "price": 10000, "category": "家具"}, {"id": 730, "name": "トマトソースパスタ", "price": 2210, "category": "料理（お食事）"}, {"id": 731, "name": "ナポリタンスパゲッティ", "price": 2210, "category": "料理（お食事）"}, {"id": 732, "name": "トゲトゲのさく", "price": 96, "category": "その他"}, {"id": 733, "name": "ハロウィンなアーチ", "price": 4500, "category": "家具"}, {"id": 734, "name": "ハロウィンなおかしプレート", "price": 875, "category": "雑貨・小物"}, {"id": 735, "name": "ハロウィンなばしゃ", "price": 35700, "category": "家具"}, {"id": 736, "name": "ハロウィンなチェア", "price": 1250, "category": "家具"}, {"id": 737, "name": "ハロウィンなクッキー", "price": 1820, "category": "料理（デザート・飲み物）"}, {"id": 738, "name": "ハロウィンなさく", "price": 585, "category": "その他"}, {"id": 739, "name": "ハロウィンなガーランド", "price": 1650, "category": "壁掛け家具"}, {"id": 740, "name": "ハロウィンなランタン", "price": 1400, "category": "雑貨・小物"}, {"id": 741, "name": "ハロウィンなランタンセット", "price": 1475, "category": "家具"}, {"id": 742, "name": "ハロウィンなかかし", "price": 1300, "category": "家具"}, {"id": 743, "name": "ハロウィンなスタンド", "price": 1450, "category": "家具"}, {"id": 744, "name": "ハロウィンなテーブル", "price": 5500, "category": "家具"}, {"id": 745, "name": "ハロウィンテーブルセッティング", "price": 1650, "category": "雑貨・小物"}, {"id": 746, "name": "ハロウィンなタワー", "price": 2450, "category": "家具"}, {"id": 747, "name": "ハロウィンなおやつバスケット", "price": 750, "category": "その他"}, {"id": 748, "name": "ハロウィンなツリー", "price": 2500, "category": "家具"}, {"id": 749, "name": "ハロウィンなトリックランプ", "price": 2900, "category": "雑貨・小物"}, {"id": 750, "name": "ハロウィンなステッキ", "price": 4300, "category": "どうぐ"}, {"id": 751, "name": "イカスミカレー", "price": 1360, "category": "料理（お食事）"}, {"id": 752, "name": "いかすみパスタ", "price": 1360, "category": "料理（お食事）"}, {"id": 753, "name": "つまれたほん", "price": 725, "category": "雑貨・小物"}, {"id": 754, "name": "つまれたボトルクレート", "price": 600, "category": "雑貨・小物"}, {"id": 755, "name": "つまれたサカナのコンテナ", "price": 1800, "category": "家具"}, {"id": 756, "name": "ざっしのたば", "price": 630, "category": "雑貨・小物"}, {"id": 757, "name": "つまれたせんまいづけのたる", "price": 1200, "category": "家具"}, {"id": 758, "name": "つまれたかいものかご", "price": 825, "category": "家具"}, {"id": 759, "name": "ウッディなかべ", "price": 1800, "category": "壁紙"}, {"id": 760, "name": "やたい", "price": 1440, "category": "家具"}, {"id": 761, "name": "かさたて", "price": 2250, "category": "家具"}, {"id": 762, "name": "スタークロック", "price": 2250, "category": "雑貨・小物"}, {"id": 763, "name": "おほしさまのあたま", "price": 2500, "category": "身につけるもの"}, {"id": 764, "name": "スターなポシェット", "price": 3000, "category": "身につけるもの"}, {"id": 765, "name": "スターなステッキ", "price": 6500, "category": "どうぐ"}, {"id": 766, "name": "スターなガーランド", "price": 5000, "category": "壁掛け家具"}, {"id": 767, "name": "スターなかべ", "price": 7500, "category": "壁紙"}, {"id": 768, "name": "ほしのすなはまのゆか", "price": 7720, "category": "ゆか"}, {"id": 769, "name": "ほしぞらのラグ", "price": 5500, "category": "ラグ・じゅうたん"}, {"id": 770, "name": "ほしぞらのかべ", "price": 7500, "category": "壁紙"}, {"id": 771, "name": "せいろ", "price": 2400, "category": "雑貨・小物"}, {"id": 772, "name": "てっぱんのゆか", "price": 5250, "category": "ゆか"}, {"id": 773, "name": "スチールのはしら", "price": null, "category": "その他"}, {"id": 774, "name": "てっこつのかべ", "price": 6000, "category": "壁紙"}, {"id": 775, "name": "ストーンアーチ", "price": 13500, "category": "家具"}, {"id": 776, "name": "いしのオノ", "price": 560, "category": "どうぐ"}, {"id": 777, "name": "いしかべ", "price": 60, "category": "その他"}, {"id": 778, "name": "せきしし", "price": 3600, "category": "家具"}, {"id": 779, "name": "いしのスツール", "price": 450, "category": "家具"}, {"id": 780, "name": "いしのテーブル", "price": 1200, "category": "家具"}, {"id": 781, "name": "せきひ", "price": 1800, "category": "家具"}, {"id": 782, "name": "いしのかべ", "price": 1500, "category": "壁紙"}, {"id": 783, "name": "いわのたまごのふく", "price": 1200, "category": "身につけるもの"}, {"id": 784, "name": "いわのたまごのから", "price": 800, "category": "身につけるもの"}, {"id": 785, "name": "いわのたまごのくつ", "price": 800, "category": "身につけるもの"}, {"id": 786, "name": "いしづくりのキッチン", "price": 15000, "category": "家具"}, {"id": 787, "name": "わらぼしのさく", "price": 56, "category": "その他"}, {"id": 788, "name": "さんどがさ", "price": 200, "category": "身につけるもの"}, {"id": 789, "name": "ストリートピアノ", "price": 26755, "category": "家具"}, {"id": 790, "name": "たにくしょくぶつ", "price": 220, "category": "雑貨・小物"}, {"id": 791, "name": "さとう", "price": 210, "category": "料理（お食事）"}, {"id": 792, "name": "シュガークレープ", "price": 1260, "category": "料理（デザート・飲み物）"}, {"id": 793, "name": "なつのかいがらのラグ", "price": 7200, "category": "ラグ・じゅうたん"}, {"id": 794, "name": "あやしげなおおがま", "price": 8000, "category": "家具"}, {"id": 795, "name": "ベンチブランコ", "price": 1440, "category": "家具"}, {"id": 796, "name": "テーブルクリスマスツリー", "price": 930, "category": "雑貨・小物"}, {"id": 797, "name": "レンガのしきりカウンターH", "price": null, "category": "その他"}, {"id": 798, "name": "コンクリートしきりカウンターH", "price": null, "category": "その他"}, {"id": 799, "name": "たかいにわいし", "price": 9000, "category": "家具"}, {"id": 800, "name": "きんのしきりカウンターH", "price": null, "category": "その他"}, {"id": 801, "name": "とうろう", "price": 2700, "category": "家具"}, {"id": 802, "name": "だいりせきのしきりカウンターH", "price": null, "category": "その他"}, {"id": 803, "name": "シンプルなしきりカウンターH", "price": null, "category": "その他"}, {"id": 804, "name": "スチールのしきりカウンターH", "price": null, "category": "その他"}, {"id": 805, "name": "もくせいのしきりカウンターH", "price": null, "category": "その他"}, {"id": 806, "name": "ちゃぶだい", "price": 1440, "category": "家具"}, {"id": 807, "name": "つっぱりラック", "price": 960, "category": "家具"}, {"id": 808, "name": "テラリウム", "price": 1740, "category": "雑貨・小物"}, {"id": 809, "name": "3だんゆきだるま", "price": 7420, "category": "家具"}, {"id": 810, "name": "ジャムクッキー", "price": 630, "category": "料理（デザート・飲み物）"}, {"id": 811, "name": "たいまつ", "price": 650, "category": "家具"}, {"id": 812, "name": "ログなドアプレート", "price": 400, "category": "壁掛け家具"}, {"id": 813, "name": "マイクロライブラリー", "price": 1035, "category": "家具"}, {"id": 814, "name": "つまれたタイヤ", "price": 60, "category": "家具"}, {"id": 815, "name": "タイヤのゆうぐ", "price": 20, "category": "家具"}, {"id": 816, "name": "トマトのアヒージョ", "price": 1260, "category": "料理（お食事）"}, {"id": 817, "name": "トマトのベーグルサンド", "price": 2210, "category": "料理（お食事）"}, {"id": 818, "name": "トマトカレー", "price": 2520, "category": "料理（お食事）"}, {"id": 819, "name": "トマトジュース", "price": 840, "category": "料理（デザート・飲み物）"}, {"id": 820, "name": "トマトピューレ", "price": 1260, "category": "料理（お食事）"}, {"id": 821, "name": "やじろべえ", "price": 1840, "category": "雑貨・小物"}, {"id": 822, "name": "みの", "price": 160, "category": "身につけるもの"}, {"id": 823, "name": "ゴミぶくろ", "price": 60, "category": "家具"}, {"id": 824, "name": "きのえだのリース", "price": 100, "category": "壁掛け家具"}, {"id": 825, "name": "ハリボテのき", "price": 1560, "category": "家具"}, {"id": 826, "name": "きのみのアーチ", "price": 5750, "category": "家具"}, {"id": 827, "name": "おおきなきのみのツリー", "price": 6080, "category": "家具"}, {"id": 828, "name": "きのみのランプ", "price": 3200, "category": "雑貨・小物"}, {"id": 829, "name": "ちいさなきのみのツリー", "price": 4120, "category": "雑貨・小物"}, {"id": 830, "name": "きのみのモビール", "price": 2030, "category": "壁掛け家具"}, {"id": 831, "name": "きのえだのステッキ", "price": 1550, "category": "どうぐ"}, {"id": 832, "name": "きりかぶのラグ", "price": 720, "category": "ラグ・じゅうたん"}, {"id": 833, "name": "トロフィーケース", "price": 33690, "category": "家具"}, {"id": 834, "name": "みなみのうみなかべ", "price": 6000, "category": "壁紙"}, {"id": 835, "name": "チューリップのかんむり", "price": 400, "category": "身につけるもの"}, {"id": 836, "name": "チューリップのビックリばこ", "price": 760, "category": "家具"}, {"id": 837, "name": "チューリップのステッキ", "price": 1580, "category": "どうぐ"}, {"id": 838, "name": "チューリップのリース", "price": 720, "category": "壁掛け家具"}, {"id": 839, "name": "カブのサラダ", "price": 680, "category": "料理（お食事）"}, {"id": 840, "name": "ウクレレ", "price": 600, "category": "雑貨・小物"}, {"id": 841, "name": "うみのそこのゆか", "price": 6600, "category": "ゆか"}, {"id": 842, "name": "すいちゅうのかべがみ", "price": 8600, "category": "壁紙"}, {"id": 843, "name": "すやきのしょっき", "price": 600, "category": "雑貨・小物"}, {"id": 844, "name": "たかとびぼう", "price": 600, "category": "どうぐ"}, {"id": 845, "name": "やさいのバスケット", "price": 3150, "category": "雑貨・小物"}, {"id": 846, "name": "やさいクッキー", "price": 2210, "category": "料理（デザート・飲み物）"}, {"id": 847, "name": "ベジタブルクレープ", "price": 1680, "category": "料理（お食事）"}, {"id": 848, "name": "やさいのカップケーキ", "price": 2210, "category": "料理（デザート・飲み物）"}, {"id": 849, "name": "やさいのキッシュ", "price": 1370, "category": "料理（お食事）"}, {"id": 850, "name": "ベジタブルサンド", "price": 1680, "category": "料理（お食事）"}, {"id": 851, "name": "たていたのさく", "price": 96, "category": "その他"}, {"id": 852, "name": "ツルのこしかけ", "price": 800, "category": "家具"}, {"id": 853, "name": "ツルのかんむり", "price": 300, "category": "身につけるもの"}, {"id": 854, "name": "ツルのガーランド", "price": 700, "category": "天井"}, {"id": 855, "name": "ツルのハンギングチェア", "price": 1000, "category": "家具"}, {"id": 856, "name": "ツルのFIXはしごキット", "price": 1940, "category": "どうぐ"}, {"id": 857, "name": "ツルのランプ", "price": 2000, "category": "雑貨・小物"}, {"id": 858, "name": "ツルのふく", "price": 1000, "category": "身につけるもの"}, {"id": 859, "name": "ステッキ", "price": 1000, "category": "どうぐ"}, {"id": 860, "name": "みなものゆか", "price": 7200, "category": "ゆか"}, {"id": 861, "name": "ておしポンプ", "price": 2700, "category": "家具"}, {"id": 862, "name": "サカナのたまごのふく", "price": 1200, "category": "身につけるもの"}, {"id": 863, "name": "サカナのたまごのから", "price": 800, "category": "身につけるもの"}, {"id": 864, "name": "サカナのたまごのくつ", "price": 800, "category": "身につけるもの"}, {"id": 865, "name": "ジョウロ", "price": 600, "category": "どうぐ"}, {"id": 866, "name": "しょうはブロック", "price": 3500, "category": "家具"}, {"id": 867, "name": "ウェディングなさく", "price": 411, "category": "その他"}, {"id": 868, "name": "ウェディングなステッキ", "price": 3500, "category": "どうぐ"}, {"id": 869, "name": "ようふうのはかいし", "price": 4500, "category": "家具"}, {"id": 870, "name": "ぜんりゅうふん", "price": 210, "category": "料理（お食事）"}, {"id": 871, "name": "ワイルドなまるたのベンチ", "price": 960, "category": "家具"}, {"id": 872, "name": "ワイルドウッドのかべ", "price": 1800, "category": "壁紙"}, {"id": 873, "name": "アネモネのかんむり", "price": 480, "category": "身につけるもの"}, {"id": 874, "name": "アネモネのせんぷうき", "price": 1740, "category": "雑貨・小物"}, {"id": 875, "name": "アネモネのステッキ", "price": 1580, "category": "どうぐ"}, {"id": 876, "name": "アネモネのリース", "price": 720, "category": "壁掛け家具"}, {"id": 877, "name": "ぴょんたろうのおきあがりこぼし", "price": 9600, "category": "雑貨・小物"}, {"id": 878, "name": "ウッディなたまごのふく", "price": 1200, "category": "身につけるもの"}, {"id": 879, "name": "ウッディなたまごのから", "price": 800, "category": "身につけるもの"}, {"id": 880, "name": "ウッディなたまごのくつ", "price": 800, "category": "身につけるもの"}, {"id": 881, "name": "もくせいのほんだな", "price": 1925, "category": "家具"}, {"id": 882, "name": "きばこ", "price": 720, "category": "家具"}, {"id": 883, "name": "もくせいのバケツ", "price": 1110, "category": "雑貨・小物"}, {"id": 884, "name": "もくせいチェア", "price": 720, "category": "家具"}, {"id": 885, "name": "もくせいチェスト", "price": 1920, "category": "家具"}, {"id": 886, "name": "もくせいダブルベッド", "price": 3600, "category": "家具"}, {"id": 887, "name": "もくせいサイドテーブル", "price": 960, "category": "家具"}, {"id": 888, "name": "もくせいのフィールドかんばん", "price": 960, "category": "家具"}, {"id": 889, "name": "もくぎょ", "price": 360, "category": "雑貨・小物"}, {"id": 890, "name": "もくせいのすがたみ", "price": 1350, "category": "家具"}, {"id": 891, "name": "もくせいFIXはしごキット", "price": 2040, "category": "どうぐ"}, {"id": 892, "name": "もくせいローテーブル", "price": 1200, "category": "家具"}, {"id": 893, "name": "もくせいミニテーブル", "price": 720, "category": "家具"}, {"id": 894, "name": "もくせいのオルゴール", "price": 1470, "category": "雑貨・小物"}, {"id": 895, "name": "もくせいのはしら", "price": null, "category": "その他"}, {"id": 896, "name": "もくせいシングルベッド", "price": 2160, "category": "家具"}, {"id": 897, "name": "もくせいスツール", "price": 480, "category": "家具"}, {"id": 898, "name": "もくせいのものおき", "price": 18300, "category": "家具"}, {"id": 899, "name": "もくせいテーブル", "price": 1800, "category": "家具"}, {"id": 900, "name": "もくせいテーブルミラー", "price": 1110, "category": "雑貨・小物"}, {"id": 901, "name": "もくせいのこうぐばこ", "price": 1980, "category": "雑貨・小物"}, {"id": 902, "name": "もくせいクロゼット", "price": 1440, "category": "家具"}, {"id": 903, "name": "もくせいのくずかご", "price": 480, "category": "家具"}, {"id": 904, "name": "つみきベッド", "price": 2400, "category": "家具"}, {"id": 905, "name": "つみきベンチ", "price": 840, "category": "家具"}, {"id": 906, "name": "つみきブックシェルフ", "price": 720, "category": "家具"}, {"id": 907, "name": "つみきチェア", "price": 720, "category": "家具"}, {"id": 908, "name": "つみきチェスト", "price": 1800, "category": "家具"}, {"id": 909, "name": "つみきコンポ", "price": 2460, "category": "家具"}, {"id": 910, "name": "つみきスツール", "price": 600, "category": "家具"}, {"id": 911, "name": "つみきテーブル", "price": 1320, "category": "家具"}, {"id": 912, "name": "つみきのおもちゃ", "price": 360, "category": "雑貨・小物"}, {"id": 913, "name": "つみきウォールクロック", "price": 1350, "category": "壁掛け家具"}, {"id": 914, "name": "ふしありウッドウォール", "price": 1800, "category": "壁紙"}, {"id": 915, "name": "よせぎのかべ", "price": 1800, "category": "壁紙"}, {"id": 916, "name": "いちまいいたのかんばん", "price": 600, "category": "壁掛け家具"}, {"id": 917, "name": "じゅかいなかべ", "price": 1380, "category": "壁紙"}, {"id": 918, "name": "ツルざいくのポシェット", "price": 500, "category": "身につけるもの"}, {"id": 919, "name": "ツルざいくのぼうし", "price": 800, "category": "身につけるもの"}, {"id": 920, "name": "きいろいたけのしきもの", "price": 1200, "category": "ラグ・じゅうたん"}, {"id": 921, "name": "きいろいおほしさまのラグ", "price": 1500, "category": "ラグ・じゅうたん"}, {"id": 922, "name": "きいろのおちば", "price": 1300, "category": "家具"}, {"id": 923, "name": "わふうのさく", "price": 330, "category": "その他"}, {"id": 924, "name": "わふうのはかいし", "price": 4500, "category": "家具"}];
+
+function toKatakana(s){
+  return s.replace(/[ぁ-ゖ]/g, ch => String.fromCharCode(ch.charCodeAt(0) + 0x60));
+}
+function normalizeForSearch(s){
+  return toKatakana(s.toLowerCase());
+}
+
+const CAT_EMOJI = {
+  "家具": "🛋️",
+  "壁掛け家具": "🖼️",
+  "雑貨・小物": "🎁",
+  "料理（お食事）": "🍽️",
+  "料理（デザート・飲み物）": "🍰",
+  "どうぐ": "🔨",
+  "ゆか": "🪵",
+  "ラグ・じゅうたん": "🧶",
+  "壁紙": "🎨",
+  "天井": "🏮",
+  "身につけるもの": "👕",
+  "その他": "📦",
+};
+const CATEGORIES = Object.keys(CAT_EMOJI);
+
+let state = { q:"", cat:"all", sort:"price-desc" };
+
+const catChips = document.getElementById('catChips');
+const cats = [["all","すべて"], ...CATEGORIES.map(c => [c, `${CAT_EMOJI[c]} ${c}`])];
+cats.forEach(([key,label])=>{
+  const chip = document.createElement('div');
+  chip.className = 'chip' + (key==='all' ? ' active' : '');
+  chip.textContent = label;
+  chip.dataset.key = key;
+  chip.addEventListener('click', ()=>{
+    state.cat = key;
+    [...catChips.children].forEach(c=>c.classList.toggle('active', c===chip));
+    render();
+  });
+  catChips.appendChild(chip);
+});
+
+document.getElementById('q').addEventListener('input', e=>{
+  state.q = e.target.value.trim();
+  render();
+});
+document.getElementById('sortSel').addEventListener('change', e=>{
+  state.sort = e.target.value;
+  render();
+});
+
+function sortComparator(a, b){
+  // 売却不可（price=null）は常に末尾に送る
+  if(a.price === null && b.price === null) return a.name.localeCompare(b.name,'ja');
+  if(a.price === null) return 1;
+  if(b.price === null) return -1;
+  if(state.sort==='price-desc') return b.price - a.price;
+  if(state.sort==='price-asc') return a.price - b.price;
+  if(state.sort==='name-asc') return a.name.localeCompare(b.name,'ja');
+  return 0;
+}
+
+function cardHtml(d){
+  const priceHtml = d.price === null
+    ? `<div class="price unsellable">売却不可</div>`
+    : `<div class="price">${d.price.toLocaleString()}<small> ベル</small></div>`;
+  return `
+    <div class="card">
+      <div class="cat-badge">${CAT_EMOJI[d.category] || '📦'}</div>
+      <div class="card-main">
+        <div>
+          <div class="name">${d.name}</div>
+          <span class="cat-tag">${d.category}</span>
+        </div>
+        ${priceHtml}
+      </div>
+    </div>
+  `;
+}
+
+function render(){
+  const list = document.getElementById('list');
+  const q = normalizeForSearch(state.q);
+  let items = DATA.filter(d=>{
+    if(state.cat !== 'all' && d.category !== state.cat) return false;
+    if(q && !normalizeForSearch(d.name).includes(q)) return false;
+    return true;
+  });
+
+  document.getElementById('countLine').textContent = `${items.length} 件表示中（全${DATA.length}件）`;
+  document.getElementById('emptyMsg').style.display = items.length ? 'none' : 'block';
+
+  let groups;
+  if(q){
+    const exact = items.filter(d => normalizeForSearch(d.name) === q).sort(sortComparator);
+    const partial = items.filter(d => normalizeForSearch(d.name) !== q).sort((a,b)=>{
+      const idxA = normalizeForSearch(a.name).indexOf(q);
+      const idxB = normalizeForSearch(b.name).indexOf(q);
+      if(idxA !== idxB) return idxA - idxB;
+      return sortComparator(a,b);
+    });
+    groups = [exact, partial];
+  }else{
+    groups = [items.sort(sortComparator)];
+  }
+
+  list.innerHTML = groups.map((group, gi) => {
+    if(group.length === 0) return '';
+    const spacer = (gi > 0 && groups[0].length > 0) ? '<div class="group-gap"></div>' : '';
+    return spacer + group.map(cardHtml).join('');
+  }).join('');
+}
+
+render();
+
+const topBtn = document.getElementById('topBtn');
+window.addEventListener('scroll', ()=>{
+  topBtn.style.display = window.scrollY > 400 ? 'block' : 'none';
+});
+topBtn.addEventListener('click', ()=> window.scrollTo({top:0, behavior:'smooth'}));
+
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>
