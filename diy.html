@@ -321,7 +321,7 @@
 
 <footer>
   <p>🔨 DIYレシピで作れる家具・道具・壁紙・床・ラグ・衣装・料理などをまとめて検索できます。ここでの売値は、作った完成品をタヌキ商店で売却したときの基本価格です（レシピカード自体の売値ではありません）。</p>
-  <p>🧵 各アイテムには必要な材料と個数も表示されます。「材料でさがす」に切り替えると、たとえば余っている貝がら（シャコガイ・サンゴなど）や鉄鉱石を使うレシピだけを高い順に絞り込めます。見つけたら、そのまま他に何が必要かも一覧で確認できます。</p>
+  <p>🧵 各アイテムには必要な材料と個数も表示されます。「材料でさがす」に切り替えると、材料のグループ（貝がら・木材・石材など）を複数同時に選んで絞り込めます（例：「貝がら」と「木材・草花のもと」と「鉱石・いし」を同時にON）。見つけたら、そのまま他に何が必要かも一覧で確認できます。</p>
   <p>🧱 マイデザ機能の「はしら」「しきりカウンター」など一部の地形パーツ（24件）は、そもそも売却の対象外のため「売却不可」と表示しています。</p>
   <p>📶 表示件数が多いため、まずカテゴリや検索で絞り込むと見やすくなります。</p>
   <p>データ出典: コミュニティのデータマイニング情報（npm「animal-crossing」パッケージ／各種公開スプレッドシート）を基に作成（2026年08月18日 時点）。ゲームアップデートで変更される場合があります。</p>
@@ -369,7 +369,7 @@ const MAT_GROUP_EMOJI = {
 const MAT_GROUPS = Array.from(new Set(DATA.flatMap(d => d.materials.map(m => m.group))))
   .sort((a,b) => (MAT_GROUP_EMOJI[a] ? Object.keys(MAT_GROUP_EMOJI).indexOf(a) : 99) - (MAT_GROUP_EMOJI[b] ? Object.keys(MAT_GROUP_EMOJI).indexOf(b) : 99));
 
-let state = { mode:"name", q:"", cat:"all", matGroup:"all", sort:"price-desc" };
+let state = { mode:"name", q:"", cat:"all", matGroups:new Set(), sort:"price-desc" };
 
 const catChips = document.getElementById('catChips');
 const cats = [["all","すべて"], ...CATEGORIES.map(c => [c, `${CAT_EMOJI[c]} ${c}`])];
@@ -387,19 +387,35 @@ cats.forEach(([key,label])=>{
 });
 
 const matChips = document.getElementById('matChips');
-const matGroupList = [["all","すべて"], ...MAT_GROUPS.map(g => [g, `${MAT_GROUP_EMOJI[g]||'🔹'} ${g}`])];
-matGroupList.forEach(([key,label])=>{
+const matAllChip = document.createElement('div');
+matAllChip.className = 'chip active';
+matAllChip.textContent = 'すべて';
+matAllChip.addEventListener('click', ()=>{
+  state.matGroups.clear();
+  syncMatChips();
+  render();
+});
+matChips.appendChild(matAllChip);
+
+const matGroupChips = new Map();
+MAT_GROUPS.forEach(g=>{
   const chip = document.createElement('div');
-  chip.className = 'chip' + (key==='all' ? ' active' : '');
-  chip.textContent = label;
-  chip.dataset.key = key;
+  chip.className = 'chip';
+  chip.textContent = `${MAT_GROUP_EMOJI[g]||'🔹'} ${g}`;
   chip.addEventListener('click', ()=>{
-    state.matGroup = key;
-    [...matChips.children].forEach(c=>c.classList.toggle('active', c===chip));
+    if(state.matGroups.has(g)) state.matGroups.delete(g);
+    else state.matGroups.add(g);
+    syncMatChips();
     render();
   });
+  matGroupChips.set(g, chip);
   matChips.appendChild(chip);
 });
+
+function syncMatChips(){
+  matAllChip.classList.toggle('active', state.matGroups.size === 0);
+  matGroupChips.forEach((chip, g) => chip.classList.toggle('active', state.matGroups.has(g)));
+}
 
 const qInput = document.getElementById('q');
 const modeNameBtn = document.getElementById('modeName');
@@ -440,7 +456,9 @@ function sortComparator(a, b){
 
 function matListHtml(d, q){
   return `<div class="mat-list">${d.materials.map(m=>{
-    const hit = state.mode==='material' && q && normalizeForSearch(m.name).includes(q);
+    const qHit = q && normalizeForSearch(m.name).includes(q);
+    const groupHit = state.matGroups.size > 0 && state.matGroups.has(m.group);
+    const hit = state.mode==='material' && (qHit || groupHit);
     return `<span class="mat-tag${hit?' hit':''}">${m.name} ×${m.qty}</span>`;
   }).join('')}</div>`;
 }
@@ -472,7 +490,7 @@ function render(){
     if(state.mode === 'name'){
       if(q && !normalizeForSearch(d.name).includes(q)) return false;
     }else{
-      if(state.matGroup !== 'all' && !d.materials.some(m => m.group === state.matGroup)) return false;
+      if(state.matGroups.size > 0 && !d.materials.some(m => state.matGroups.has(m.group))) return false;
       if(q && !d.materials.some(m => normalizeForSearch(m.name).includes(q))) return false;
     }
     return true;
