@@ -22,6 +22,10 @@
     --blue: #3f7fb0;
     --radius: 14px;
     --shadow: 0 2px 10px rgba(51,47,69,0.08);
+    --mat: #1f9d8a;
+    --mat-dark: #167d6d;
+    --mat-soft: #e0f5f1;
+    --mat-line: #a9e2d8;
   }
   *{box-sizing:border-box;}
   body{
@@ -127,6 +131,37 @@
     border-color: var(--accent);
     color:#fff;
     font-weight:600;
+  }
+  .filter-label{
+    font-size:.72rem;
+    font-weight:700;
+    color: var(--ink-soft);
+    margin-top:14px;
+    margin-bottom:2px;
+    letter-spacing:.02em;
+  }
+  .search-row + .filter-label{
+    margin-top:10px;
+  }
+  .mat-section{
+    margin-top:6px;
+    padding:10px 10px 12px;
+    background: var(--mat-soft);
+    border:1.5px dashed var(--mat-line);
+    border-radius:12px;
+  }
+  .mat-section .filter-label{ margin-top:0; color: var(--mat-dark); }
+  .mat-section .chip-row{ margin-top:6px; }
+  .mat-section .chip{
+    border-color: var(--mat-line);
+    background:#fff;
+    color: var(--mat-dark);
+  }
+  .mat-section .chip:hover{ border-color: var(--mat); }
+  .mat-section .chip.active{
+    background: var(--mat);
+    border-color: var(--mat);
+    color:#fff;
   }
   .toggle-row{
     display:flex;
@@ -234,9 +269,9 @@
     white-space:nowrap;
   }
   .mat-tag.hit{
-    background: var(--accent-soft);
-    border-color: var(--accent);
-    color: var(--accent-dark);
+    background: var(--mat-soft);
+    border-color: var(--mat);
+    color: var(--mat-dark);
     font-weight:700;
   }
   .empty{
@@ -301,8 +336,12 @@
     <div class="search-row">
       <input type="text" id="q" placeholder="名前で検索（例：もくせいスツール）" autocomplete="off">
     </div>
+    <div class="filter-label">📂 カテゴリ（1つだけ選べます）</div>
     <div class="chip-row" id="catChips"></div>
-    <div class="chip-row" id="matChips" style="display:none;"></div>
+    <div class="mat-section" id="matSection" style="display:none;">
+      <div class="filter-label">🧵 材料グループ（複数選べます・すべて選んだ材料を使うものだけに絞り込みます）</div>
+      <div class="chip-row" id="matChips"></div>
+    </div>
     <div class="toggle-row">
       <select id="sortSel">
         <option value="price-desc">売値が高い順</option>
@@ -387,6 +426,7 @@ cats.forEach(([key,label])=>{
 });
 
 const matChips = document.getElementById('matChips');
+const matSection = document.getElementById('matSection');
 const matAllChip = document.createElement('div');
 matAllChip.className = 'chip active';
 matAllChip.textContent = 'すべて';
@@ -425,7 +465,7 @@ function setMode(mode){
   state.mode = mode;
   modeNameBtn.classList.toggle('active', mode==='name');
   modeMatBtn.classList.toggle('active', mode==='material');
-  matChips.style.display = mode==='material' ? 'flex' : 'none';
+  matSection.style.display = mode==='material' ? 'block' : 'none';
   qInput.placeholder = mode==='material'
     ? '材料名で検索（例：シャコガイ、てっこうせき）'
     : '名前で検索（例：もくせいスツール）';
