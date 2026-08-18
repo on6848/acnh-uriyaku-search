@@ -321,7 +321,7 @@
 
 <footer>
   <p>🔨 DIYレシピで作れる家具・道具・壁紙・床・ラグ・衣装・料理などをまとめて検索できます。ここでの売値は、作った完成品をタヌキ商店で売却したときの基本価格です（レシピカード自体の売値ではありません）。</p>
-  <p>🧵 各アイテムには必要な材料と個数も表示されます。「材料でさがす」に切り替えると、材料のグループ（貝がら・木材・石材など）を複数同時に選んで絞り込めます（例：「貝がら」と「木材・草花のもと」と「鉱石・いし」を同時にON）。見つけたら、そのまま他に何が必要かも一覧で確認できます。</p>
+  <p>🧵 各アイテムには必要な材料と個数も表示されます。「材料でさがす」に切り替えると、材料のグループ（貝がら・木材・石材など）を複数同時に選んで絞り込めます。複数選んだ場合は、選んだグループの材料をすべて使うレシピだけに絞り込まれます（例：「貝がら」と「鉱石・いし」を両方ONにすると、貝がらも鉱石も両方使うレシピだけが表示されます）。見つけたら、そのまま他に何が必要かも一覧で確認できます。</p>
   <p>🧱 マイデザ機能の「はしら」「しきりカウンター」など一部の地形パーツ（24件）は、そもそも売却の対象外のため「売却不可」と表示しています。</p>
   <p>📶 表示件数が多いため、まずカテゴリや検索で絞り込むと見やすくなります。</p>
   <p>データ出典: コミュニティのデータマイニング情報（npm「animal-crossing」パッケージ／各種公開スプレッドシート）を基に作成（2026年08月18日 時点）。ゲームアップデートで変更される場合があります。</p>
@@ -490,7 +490,10 @@ function render(){
     if(state.mode === 'name'){
       if(q && !normalizeForSearch(d.name).includes(q)) return false;
     }else{
-      if(state.matGroups.size > 0 && !d.materials.some(m => state.matGroups.has(m.group))) return false;
+      if(state.matGroups.size > 0){
+        const itemGroups = new Set(d.materials.map(m => m.group));
+        for(const g of state.matGroups){ if(!itemGroups.has(g)) return false; }
+      }
       if(q && !d.materials.some(m => normalizeForSearch(m.name).includes(q))) return false;
     }
     return true;
