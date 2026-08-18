@@ -47,6 +47,8 @@
   header p{
     margin: 0;
     font-size: .82rem;
+    line-height: 1.45;
+    min-height: calc(1.45em * 2); /* 2行分の高さを常に確保し、文言の折り返し有無でナビバーの位置がずれないようにする */
     opacity: .9;
   }
   .page-nav{
@@ -130,30 +132,110 @@
     margin-top:12px;
     padding-top:12px;
     border-top:1px dashed var(--line);
-  }
-  .progress-label{
     display:flex;
-    justify-content:space-between;
-    align-items:baseline;
-    font-size:.85rem;
-    color: var(--ink-soft);
-    margin-bottom:6px;
+    align-items:center;
+    gap:14px;
   }
-  .progress-label b{
+  .ring-wrap{
+    position:relative;
+    width:86px;height:86px;
+    flex:0 0 auto;
+  }
+  .ring-svg{ width:100%; height:100%; transform:rotate(-90deg); }
+  .ring-bg{ fill:none; stroke:var(--accent-soft); stroke-width:10; }
+  .ring-fg{
+    fill:none;
+    stroke:var(--accent);
+    stroke-width:10;
+    stroke-linecap:round;
+    transition: stroke-dashoffset .5s cubic-bezier(.2,.8,.2,1), stroke .4s ease;
+  }
+  .ring-fg.complete{ stroke: var(--gold); }
+  .ring-center{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+  }
+  .ring-pct{ font-weight:800; font-size:1.05rem; color:var(--accent-dark); line-height:1.1; }
+  .ring-pct.complete{ color: var(--gold); }
+  .ring-sub{ font-size:.6rem; color:var(--ink-soft); margin-top:1px; }
+  .progress-stats{ flex:1; min-width:0; }
+  .stat-line{ font-size:.88rem; color:var(--ink); }
+  .stat-line b{ font-size:1.15rem; color:var(--accent-dark); }
+  .stat-sub{ font-size:.76rem; color:var(--ink-soft); margin-top:3px; }
+  .stat-sub b{ font-size:.76rem; color:var(--ink-soft); font-weight:700; }
+  .progress-msg{
+    margin-top:6px;
+    font-size:.78rem;
+    font-weight:700;
     color: var(--accent-dark);
-    font-size:1.05rem;
+    min-height:1.2em;
   }
-  .progress-track{
+  .badge-row{
+    display:flex;
+    gap:7px;
+    margin-top:12px;
+    padding-top:11px;
+    border-top:1px dashed var(--line);
+  }
+  .badge{
+    flex:1;
+    min-width:0;
+    text-align:center;
+    padding:7px 3px 6px;
+    border-radius:10px;
+    background: var(--bg);
+    border:1px solid var(--line);
+    font-size:.6rem;
+    color: var(--ink-soft);
+    opacity:.55;
+    transition: all .2s ease;
+  }
+  .badge .b-icon{ font-size:1.2rem; display:block; margin-bottom:2px; }
+  .badge.achieved{
+    opacity:1;
     background: var(--accent-soft);
-    border-radius: 6px;
-    height: 12px;
-    overflow:hidden;
+    border-color: var(--accent);
+    color: var(--accent-dark);
+    font-weight:700;
   }
-  .progress-fill{
-    height:12px;
-    background: linear-gradient(90deg, var(--accent) 0%, var(--done) 100%);
-    border-radius: 6px;
-    transition: width .25s ease;
+  .badge.achieved.gold{
+    background: linear-gradient(135deg, #fff6df, #ffe6a8);
+    border-color: var(--gold);
+    color:#8a6417;
+  }
+  .complete-banner{
+    margin-top:12px;
+    padding:11px 14px;
+    border-radius:12px;
+    background: linear-gradient(135deg, #fff0c4, #ffd27a);
+    color:#7a5416;
+    font-weight:800;
+    font-size:.85rem;
+    text-align:center;
+    display:none;
+    animation: pulseGlow 1.7s ease-in-out infinite;
+  }
+  .complete-banner.show{ display:block; }
+  @keyframes pulseGlow{
+    0%,100%{ box-shadow: 0 0 0 0 rgba(200,145,42,0.35); }
+    50%{ box-shadow: 0 0 0 9px rgba(200,145,42,0); }
+  }
+  .confetti-container{
+    position:fixed; inset:0; pointer-events:none; z-index:60; overflow:hidden;
+  }
+  .confetti-piece{
+    position:absolute;
+    top:-12px;
+    width:8px;height:8px;
+    border-radius:2px;
+    opacity:.95;
+    animation-name: confettiFall;
+    animation-timing-function: ease-in;
+    animation-fill-mode: forwards;
+  }
+  @keyframes confettiFall{
+    0%{ transform: translateY(0) rotate(0deg); opacity:1; }
+    100%{ transform: translateY(110vh) rotate(560deg); opacity:0; }
   }
   .count-line{
     font-size:.8rem;
@@ -173,6 +255,11 @@
     border-radius: 12px;
     box-shadow: 0 1px 4px rgba(59,51,42,0.05);
     overflow:hidden;
+    transition: border-color .2s ease, box-shadow .2s ease;
+  }
+  .group-card.complete{
+    border-color: var(--gold);
+    box-shadow: 0 1px 8px rgba(200,145,42,0.25);
   }
   .group-head{
     display:flex;
@@ -181,6 +268,10 @@
     gap:10px;
     padding: 10px 13px;
     background: var(--accent-soft);
+    transition: background .2s ease;
+  }
+  .group-card.complete .group-head{
+    background: linear-gradient(135deg, #fff6df, #ffe6a8);
   }
   .group-head .gname{
     font-weight:800;
@@ -195,14 +286,21 @@
     color: var(--ink-soft);
     white-space:nowrap;
   }
-  .group-progress.complete{ color: var(--done); }
+  .group-progress.complete{ color:#8a6417; }
   .part-row{
     display:flex;
     align-items:center;
     gap:12px;
-    padding: 9px 13px;
+    padding: 11px 13px;
     border-top: 1px solid var(--line);
+    cursor:pointer;
+    user-select:none;
+    -webkit-tap-highlight-color: rgba(163,118,63,0.15);
+    transition: background .12s ease;
   }
+  .part-row:hover{ background: var(--bg); }
+  .part-row:active{ background: var(--accent-soft); }
+  .part-row:focus-visible{ outline:2px solid var(--accent); outline-offset:-2px; }
   .part-row.done{ opacity:.55; }
   .part-main{ flex:1; min-width:0; }
   .part-top{
@@ -229,8 +327,8 @@
   .catch-check{
     width:22px;height:22px;
     accent-color: var(--accent);
-    cursor:pointer;
     flex:0 0 auto;
+    pointer-events:none; /* 行全体をタップ領域にするため、チェックボックス自体は見た目だけ */
   }
   .empty{
     text-align:center;
@@ -299,9 +397,24 @@
       <label class="toggle"><input type="checkbox" id="hideDone"> 収集済みを隠す</label>
     </div>
     <div class="progress-box">
-      <div class="progress-label"><span>収集状況</span><span><b id="doneCount">0</b> / 73 種（<span id="donePct">0</span>%）</span></div>
-      <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+      <div class="ring-wrap">
+        <svg class="ring-svg" viewBox="0 0 120 120">
+          <circle class="ring-bg" cx="60" cy="60" r="52"></circle>
+          <circle class="ring-fg" id="ringFg" cx="60" cy="60" r="52"></circle>
+        </svg>
+        <div class="ring-center">
+          <div class="ring-pct" id="ringPct">0%</div>
+          <div class="ring-sub">収集済み</div>
+        </div>
+      </div>
+      <div class="progress-stats">
+        <div class="stat-line"><b id="doneCount">0</b> / 73 種</div>
+        <div class="stat-sub">🧩 コレクション <b id="groupDoneCount">0</b> / <span id="groupTotalCount">0</span> 完成</div>
+        <div class="progress-msg" id="progressMsg"></div>
+      </div>
     </div>
+    <div class="badge-row" id="badgeRow"></div>
+    <div class="complete-banner" id="completeBanner">🎉 全73種コンプリート！博物館の展示が完成しました 🎉</div>
     <div class="count-line" id="countLine"></div>
   </div>
 
@@ -312,7 +425,7 @@
 <button class="top-btn" id="topBtn">↑</button>
 
 <footer>
-  <p>💡 チェックボックスは収集済みのものの一時的なメモです（このページを閉じる・再読み込みすると消えます／どうぶつの森ゲーム内のとびだせ！図鑑データとは連動していません）。</p>
+  <p>💡 行をタップ／チェックすると収集済みとして記録され、このブラウザに保存されます（次に開いたときも状態が残ります。別の端末やブラウザとは同期されません／どうぶつの森ゲーム内のとびだせ！図鑑データとは連動していません）。保存できない環境（プライベートブラウジング等）では、このページを開いている間だけのメモになります。</p>
   <p>🦴 化石は季節や時間帯に関係なく、島のどこか（地面の亀裂・崖の上・砂浜など）に1日5〜6個湧きます。掘り出した化石は博物館のブラーゼ（フータ）に見せて鑑定してもらうまで名前がわかりません。</p>
   <p>🧩 「仲間ごとにまとめる」表示では、複数のパーツからなる化石（骨格）をひとまとめにして、何個中何個そろっているかを確認できます。</p>
   <p>データ出典: 各種あつ森攻略サイトの公開情報をもとに作成（2026年08月18日 時点）。ゲームアップデートで変更される場合があります。</p>
@@ -328,9 +441,76 @@ function normalizeForSearch(s){
   return toKatakana(s.toLowerCase());
 }
 
-const done = new Set(); // session-only memory, not persisted
+// 収集状況はこのブラウザに保存する（localStorageが使えない環境ではセッション内メモにフォールバック）。
+const STORAGE_KEY = 'acnh_fossil_done_v1';
+function loadDone(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      const arr = JSON.parse(raw);
+      if(Array.isArray(arr)) return new Set(arr);
+    }
+  }catch(e){}
+  return new Set();
+}
+function saveDone(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify([...done])); }catch(e){}
+}
+const done = loadDone();
 
 let state = { q:"", sort:"group", hideDone:false };
+
+const TOTAL_GROUPS = new Set(DATA.map(d => d.group)).size;
+document.getElementById('groupTotalCount').textContent = TOTAL_GROUPS;
+
+const RING_R = 52;
+const RING_CIRC = 2 * Math.PI * RING_R;
+const ringFg = document.getElementById('ringFg');
+ringFg.style.strokeDasharray = RING_CIRC;
+ringFg.style.strokeDashoffset = RING_CIRC;
+
+// 集めるほど楽しくなるように、達成度に応じたバッジとメッセージを用意する。
+const MILESTONES = [
+  { n: 1,  icon: '🌱', label: 'はじめての化石' },
+  { n: 10, icon: '🥉', label: '10種達成' },
+  { n: 25, icon: '🥈', label: '25種達成' },
+  { n: 50, icon: '🥇', label: '50種達成' },
+  { n: 73, icon: '🏆', label: 'コンプリート', gold: true },
+];
+function progressMessage(n){
+  if(n === 0) return 'さあ、化石集めをはじめよう！';
+  if(n === DATA.length) return '🎉 全73種コンプリート！おめでとうございます！';
+  if(n >= DATA.length - 5) return `あと${DATA.length - n}種でコンプリート！`;
+  if(n >= 50) return '折り返しを大きく突破、ラストスパート！';
+  if(n >= 25) return '半分に近づいてきました！順調です';
+  if(n >= 10) return 'いいペースで集まっています！';
+  return '集め始めました、この調子で🦴';
+}
+function renderBadges(n){
+  const row = document.getElementById('badgeRow');
+  row.innerHTML = MILESTONES.map(m=>{
+    const achieved = n >= m.n;
+    return `<div class="badge ${achieved?'achieved':''} ${achieved && m.gold ? 'gold':''}"><span class="b-icon">${m.icon}</span>${m.label}</div>`;
+  }).join('');
+}
+
+let confettiFired = (done.size === DATA.length); // 前回すでにコンプリート済みなら、次に0からは祝わない
+function launchConfetti(){
+  const colors = ['#c8912a','#4f8a5b','#3f7fb0','#d9a85c','#a3763f','#e0b04a'];
+  const container = document.createElement('div');
+  container.className = 'confetti-container';
+  for(let i=0;i<32;i++){
+    const p = document.createElement('span');
+    p.className = 'confetti-piece';
+    p.style.left = (Math.random()*100) + '%';
+    p.style.background = colors[i % colors.length];
+    p.style.animationDelay = (Math.random()*0.5) + 's';
+    p.style.animationDuration = (1.7 + Math.random()*1.1) + 's';
+    container.appendChild(p);
+  }
+  document.body.appendChild(container);
+  setTimeout(()=> container.remove(), 3000);
+}
 
 document.getElementById('q').addEventListener('input', e=>{
   state.q = e.target.value.trim();
@@ -355,8 +535,8 @@ function sortComparator(a, b){
 function partRowHtml(d){
   const isDone = done.has(d.id);
   return `
-    <div class="part-row ${isDone?'done':''}">
-      <input type="checkbox" class="catch-check" ${isDone?'checked':''} data-id="${d.id}" title="収集済み">
+    <div class="part-row ${isDone?'done':''}" data-id="${d.id}" role="button" tabindex="0" aria-pressed="${isDone}">
+      <input type="checkbox" class="catch-check" ${isDone?'checked':''} tabindex="-1" aria-hidden="true">
       <div class="part-main">
         <div class="part-top">
           <div class="part-name">${d.name}${d.part ? `<span class="part-tag">（${d.part}）</span>` : ''}</div>
@@ -372,9 +552,9 @@ function groupCardHtml(groupName, items){
   const total = items.length;
   const complete = doneN === total;
   return `
-    <div class="group-card">
+    <div class="group-card ${complete?'complete':''}">
       <div class="group-head">
-        <div class="gname">🦴 ${groupName}</div>
+        <div class="gname">${complete?'🏆':'🦴'} ${groupName}</div>
         <div class="group-progress ${complete?'complete':''}">${complete?'✓ ':''}${doneN} / ${total}</div>
       </div>
       ${items.map(partRowHtml).join('')}
@@ -395,9 +575,35 @@ function render(){
   document.getElementById('emptyMsg').style.display = items.length ? 'none' : 'block';
 
   const doneTotal = DATA.filter(d => done.has(d.id)).length;
+  const pct = doneTotal / DATA.length * 100;
+  const isComplete = doneTotal === DATA.length;
+
   document.getElementById('doneCount').textContent = doneTotal;
-  document.getElementById('donePct').textContent = Math.round(doneTotal / DATA.length * 100);
-  document.getElementById('progressFill').style.width = (doneTotal / DATA.length * 100) + '%';
+  document.getElementById('ringPct').textContent = Math.round(pct) + '%';
+  document.getElementById('ringPct').classList.toggle('complete', isComplete);
+  ringFg.style.strokeDashoffset = RING_CIRC - (RING_CIRC * pct / 100);
+  ringFg.classList.toggle('complete', isComplete);
+
+  // グループ（骨格などの仲間）単位で全部そろっているかを数える
+  const byGroup = new Map();
+  DATA.forEach(d=>{
+    if(!byGroup.has(d.group)) byGroup.set(d.group, []);
+    byGroup.get(d.group).push(d);
+  });
+  let groupsComplete = 0;
+  byGroup.forEach(items=>{ if(items.every(d => done.has(d.id))) groupsComplete++; });
+  document.getElementById('groupDoneCount').textContent = groupsComplete;
+
+  document.getElementById('progressMsg').textContent = progressMessage(doneTotal);
+  renderBadges(doneTotal);
+  document.getElementById('completeBanner').classList.toggle('show', isComplete);
+
+  if(isComplete && !confettiFired){
+    confettiFired = true;
+    launchConfetti();
+  }else if(!isComplete){
+    confettiFired = false;
+  }
 
   let html = '';
 
@@ -437,13 +643,24 @@ function render(){
 
   list.innerHTML = html;
 
-  list.querySelectorAll('.catch-check').forEach(cb=>{
-    cb.addEventListener('change', e=>{
-      const id = Number(e.target.dataset.id);
-      if(e.target.checked) done.add(id); else done.delete(id);
-      render();
+  // 行全体（名前の欄）をタップ／クリック／Enterキーでチェックできるようにする
+  // （チェックボックス自体はスマホだと小さくて押しにくいため、見た目だけにしてある）。
+  list.querySelectorAll('.part-row').forEach(row=>{
+    const id = Number(row.dataset.id);
+    row.addEventListener('click', ()=> toggleDone(id));
+    row.addEventListener('keydown', e=>{
+      if(e.key === 'Enter' || e.key === ' '){
+        e.preventDefault();
+        toggleDone(id);
+      }
     });
   });
+}
+
+function toggleDone(id){
+  if(done.has(id)) done.delete(id); else done.add(id);
+  saveDone();
+  render();
 }
 
 render();

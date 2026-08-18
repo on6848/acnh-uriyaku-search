@@ -47,6 +47,8 @@
   header p{
     margin: 0;
     font-size: .82rem;
+    line-height: 1.45;
+    min-height: calc(1.45em * 2); /* 2行分の高さを常に確保し、文言の折り返し有無でナビバーの位置がずれないようにする */
     opacity: .9;
   }
   .page-nav{
